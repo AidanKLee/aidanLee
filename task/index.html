@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <link rel="stylesheet" href="./css/style.css" type="text/css"/>
+        <meta charset="utf-8" />
+        <meta name="author" content="Aidan Lee" />
+        <meta name="description" content="Find out geolocation information using API's provided by geonames.org." />
+        <meta name="keywords" content="geo,location,geolocation,street,block,village,town,city,country,world" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <noscript>JavaScript must be enabled within your browser.</noscript>
+        <title>GeoNames - A List of Popular API's</title>
+    </head>
+
+    <body>
+
+        <header id="header">
+            <h1>
+                GeoNames
+            </h1>
+        </header>
+
+        <main id="main">
+
+            <table>
+                <thead>
+                    <tr>
+                        <th class="left">
+                            API Name
+                        </th>
+                        <th>
+                            API Description
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- API #1 -->
+                    <tr>
+                        <th>
+                            Postal Code Search
+                        </th>
+                        <td class="description">
+                            <p>Get a list of nearby postal codes and places for the name of a place or postcode provided.</p>
+                            <form id="postal-code" method="GET" action="">
+                                <label for="placename">Place*:</label>
+                                <input id="placename" name="placename" type="text" required/>
+                            </form>
+                        </td>
+                        <td>
+                            <button type="submit" form="postal-code">Submit</button>
+                        </td>
+                    </tr>
+                    <!-- API #2 -->
+                    <tr>
+                        <th>
+                            Geo Code Address
+                        </th>
+                        <td class="description">
+                            <p>Get the latitude and longitude for a given address.</p>
+                            <form id="geo-code-address" method="GET" action="">
+                                <div>
+                                    <label for="q">Address*:</label>
+                                    <input id="q" name="q" type="text" required />
+                                </div>
+                                <div>
+                                    <label for="postalcode">Postcode:</label>
+                                    <input id="postalcode" name="postalcode" type="text" />
+                                </div>
+                                <div>
+                                    <label for="country-1">Country:</label>
+                                    <select id="country-1" name="country" >
+                                        <option class="inactive" value="">Select a country...</option>
+                                    </select>
+                                </div>
+                            </form>
+                        </td>
+                        <td>
+                            <button type="submit" form="geo-code-address">Submit</button>
+                        </td>
+                    </tr>
+                    <!-- API #3 -->
+                    <tr>
+                        <th>
+                            Country Information
+                        </th>
+                        <td class="description">
+                            <p>Get some general information about the specified country (like the captial city, population, the land area and mainland bounding box.</p>
+                            <form id="country-data" method="GET" action="">
+                                <label for="country-2">Place*:</label>
+                                <input id="country-2" name="country" type="text" required/>
+                            </form>
+                        </td>
+                        <td>
+                            <button type="submit" form="country-data">Submit</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </main>
+
+        <footer id="footer">
+
+        </footer>
+
+        <div id="preloader">
+
+        </div>
+
+        <script type="module" src="./js/script.js"></script>
+    </body>
+
+</html>
