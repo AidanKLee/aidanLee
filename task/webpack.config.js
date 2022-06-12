@@ -9,11 +9,7 @@ const HtmlMinimizerPlugin = require('html-minimizer-webpack-plugin');
 
 module.exports = {
 	entry: {
-		index: './src/js/index.js',
-		$: path.join(__dirname, 'src/modules/jquery/jquery.min.js'),
-		countryList: path.join(__dirname, 'src/js/countryList.js'),
-		FormHandler: path.join(__dirname, 'src/modules/formHandler.js'),
-		Text: path.join(__dirname, 'src/modules/Text.js')
+		index: './src/js/index.js'
 	},
 	devServer: {
 		static: './public'
