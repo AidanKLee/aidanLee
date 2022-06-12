@@ -1,0 +1,175 @@
+@import './fonts.css';
+
+* {
+    font-family: 'Poppins', 'DM Sans', Arial, Helvetica, sans-serif;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: whitesmoke;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+    position: sticky;
+    top: 0;
+    padding: 8px 16px;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
+}
+
+header > a {
+    display: flex;
+}
+
+header img {
+    height: 80px;
+    width: auto;
+    margin-right: 16px;
+}
+
+header > nav {
+    flex: 1 1;
+    margin-left: 48px;
+}
+
+header > nav > a:link {
+    display: inline-block;
+    text-decoration: none;
+    margin-right: 8px;
+    font-weight: 600;
+    transition: .2s;
+}
+
+header > nav > a:visited {
+    color: #4040ff;
+}
+
+header > nav > a:hover {
+    text-decoration: underline;
+}
+
+header > nav > a:focus {
+    transform: scale(.9);
+}
+
+h2 {
+    padding-top: 16px;
+    padding-left: 16px;
+    font-size: 1.6rem;
+    font-weight: 600;
+}
+
+h3 {
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+table {
+    width: 100%;
+    border-spacing: 16px;
+    max-width: 100%;
+    box-shadow: 0 8px 8px rgba(0, 0, 0, 0.1);
+}
+
+th {
+    font-size: 1.2rem;
+    font-weight: 500;
+    text-align: left;
+    vertical-align: top;
+}
+
+thead > tr > th {
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+td.button {
+    width: 116px;
+    position: relative;
+    bottom: 0;
+}
+
+td > p {
+    margin: 0 0 8px;
+}
+
+td > form label {
+    display: block;
+    font-size: .8rem;
+    font-weight: 500;
+}
+
+td > form > div {
+    display: inline-block;
+}
+
+button {
+    padding: 8px 32px;
+    font-weight: 500;
+    position: absolute;
+    bottom: 0;
+}
+
+input, select {
+    padding: 8px;
+}
+
+select {
+    min-width: 183px;
+    width: 100%;
+}
+
+.inactive {
+    color: darkgrey;
+}
+
+#results > ol {
+    margin: 0 16px;
+    padding-left: 96px;
+}
+
+#results > ol > li {
+    margin-top: 16px;
+    height: fit-content;
+}
+
+#results > ol > li::marker {
+    font-size: 3rem;
+    font-weight: 600;
+}
+
+#results > ol > li > div {
+    width: 18%;
+    display: inline-block;
+    margin-bottom: 8px;
+    margin-right: 2%;
+}
+
+#results > ol > li > div > p {
+    max-width: 100%;
+    white-space: pre-line;
+    overflow: hidden;
+}
+
+dialog#preloader {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background-color: whitesmoke;
+    height: 256px;
+    width: 256px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+}
+
+dialog#preloader svg {
+    height: 100%;
+    width: 100%;
+    stroke: rgba(0, 0, 0, 0.2);
+}

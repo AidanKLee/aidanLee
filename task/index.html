@@ -2,7 +2,7 @@
 <html lang="en">
 
     <head>
-        <link rel="stylesheet" href="./css/style.css" type="text/css"/>
+        <link rel="apple-touch-icon" type="image/png" sizes="1000x1000" href="./src/media/images/logo.png">
         <meta charset="utf-8" />
         <meta name="author" content="Aidan Lee" />
         <meta name="description" content="Find out geolocation information using API's provided by geonames.org." />
@@ -15,14 +15,19 @@
     <body>
 
         <header id="header">
+            <a id="logo-link" href="/"></a>
             <h1>
                 GeoNames
             </h1>
+            <nav>
+                <a href="#api">API</a>
+                <a href="#results">Results</a>
+            </nav>
         </header>
 
         <main id="main">
 
-            <table>
+            <table id="api">
                 <thead>
                     <tr>
                         <th class="left">
@@ -41,13 +46,21 @@
                         </th>
                         <td class="description">
                             <p>Get a list of nearby postal codes and places for the name of a place or postcode provided.</p>
-                            <form id="postal-code" method="GET" action="">
-                                <label for="placename">Place*:</label>
-                                <input id="placename" name="placename" type="text" required/>
+                            <form id="postal-code" method="POST">
+                                <div>
+                                    <label for="placename">Place*:</label>
+                                    <input id="placename" name="placename" type="text" required/>
+                                </div>
+                                <div>
+                                    <label for="country-1">Country:</label>
+                                    <select class="country" id="country-1" name="country" >
+                                        <option class="inactive" value="">Select a country...</option>
+                                    </select>
+                                </div>
                             </form>
                         </td>
-                        <td>
-                            <button type="submit" form="postal-code">Submit</button>
+                        <td class="button">
+                            <button class="submit" type="submit" form="postal-code" name="submit" value="postal-code">Submit</button>
                         </td>
                     </tr>
                     <!-- API #2 -->
@@ -57,7 +70,7 @@
                         </th>
                         <td class="description">
                             <p>Get the latitude and longitude for a given address.</p>
-                            <form id="geo-code-address" method="GET" action="">
+                            <form id="geo-code-address" method="POST">
                                 <div>
                                     <label for="q">Address*:</label>
                                     <input id="q" name="q" type="text" required />
@@ -67,15 +80,15 @@
                                     <input id="postalcode" name="postalcode" type="text" />
                                 </div>
                                 <div>
-                                    <label for="country-1">Country:</label>
-                                    <select id="country-1" name="country" >
+                                    <label for="country-2">Country:</label>
+                                    <select class="country" id="country-2" name="country" >
                                         <option class="inactive" value="">Select a country...</option>
                                     </select>
                                 </div>
                             </form>
                         </td>
-                        <td>
-                            <button type="submit" form="geo-code-address">Submit</button>
+                        <td class="button">
+                            <button class="submit" type="submit" form="geo-code-address" name="submit" value="geo-code-address">Submit</button>
                         </td>
                     </tr>
                     <!-- API #3 -->
@@ -84,18 +97,24 @@
                             Country Information
                         </th>
                         <td class="description">
-                            <p>Get some general information about the specified country (like the captial city, population, the land area and mainland bounding box.</p>
-                            <form id="country-data" method="GET" action="">
-                                <label for="country-2">Place*:</label>
-                                <input id="country-2" name="country" type="text" required/>
+                            <p>Get some general information about the specified country (like the captial city, population, the land area and mainland bounding box etc.).</p>
+                            <form id="country-data" method="POST">
+                                <div>
+                                    <label for="country-3">Country*:</label>
+                                    <select class="country" id="country-3" name="country" >
+                                        <option class="inactive" value="">Select a country...</option>
+                                    </select>
+                                </div>
                             </form>
                         </td>
-                        <td>
-                            <button type="submit" form="country-data">Submit</button>
+                        <td class="button">
+                            <button class="submit" type="submit" form="country-data" name="submit" value="country-data">Submit</button>
                         </td>
                     </tr>
                 </tbody>
             </table>
+
+            <section id="results"></section>
 
         </main>
 
@@ -103,11 +122,9 @@
 
         </footer>
 
-        <div id="preloader">
-
-        </div>
-
-        <script type="module" src="./js/script.js"></script>
+        <dialog id="preloader" open="open">
+            <svg width="45" height="45" viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg" stroke="#fff"><g fill="none" fill-rule="evenodd" transform="translate(1 1)" stroke-width="2"><circle cx="22" cy="22" r="6" stroke-opacity="0"><animate attributeName="r" begin="1.5s" dur="3s" values="6;22" calcMode="linear" repeatCount="indefinite" /><animate attributeName="stroke-opacity" begin="1.5s" dur="3s" values="1;0" calcMode="linear" repeatCount="indefinite" /><animate attributeName="stroke-width" begin="1.5s" dur="3s" values="2;0" calcMode="linear" repeatCount="indefinite" /></circle><circle cx="22" cy="22" r="6" stroke-opacity="0"><animate attributeName="r" begin="3s" dur="3s" values="6;22" calcMode="linear" repeatCount="indefinite" /><animate attributeName="stroke-opacity" begin="3s" dur="3s" values="1;0" calcMode="linear" repeatCount="indefinite" /><animate attributeName="stroke-width" begin="3s" dur="3s" values="2;0" calcMode="linear" repeatCount="indefinite" /></circle><circle cx="22" cy="22" r="8"><animate attributeName="r" begin="0s" dur="1.5s" values="6;1;2;3;4;5;6" calcMode="linear" repeatCount="indefinite" /></circle></g></svg>
+        </dialog>
     </body>
 
 </html>

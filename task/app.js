@@ -5,12 +5,12 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use('/', express.static('./static'))
+app.use('/', express.static('./public'));
 
-app.get("/", (req, res, next) => {
-    res.sendFile(path.join(__dirname, '/index.html'));
-})
+app.get('/', (req, res) => {
+	res.sendFile(path.join(__dirname, 'pubilc/index.html'));
+});
 
 app.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
-})
+	console.log(`Server listening on port ${PORT}`);
+});
