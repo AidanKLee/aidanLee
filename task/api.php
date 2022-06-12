@@ -4,7 +4,7 @@
     $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
     $dotenv -> load();
 
-    $username = $_ENV['username'];
+    $username = $_ENV['USERNAME'];
 
     ini_set('display_errors', 'On');
     error_reporting(E_ALL);
@@ -44,7 +44,8 @@
     $output['status']['returnedIn'] = intval((microtime(true) - $executionStartTime) * 1000) . 'ms';
     $output['data'] = $response;
 
-    header('Content-Type: application/json; charset: UTF-8');
+    header("Access-Control-Allow-Origin: *");
+    header('Content-Type: application/json; charset=UTF-8');
 
     echo json_encode($output);
 ?>

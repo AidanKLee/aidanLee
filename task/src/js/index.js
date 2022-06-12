@@ -45,7 +45,8 @@ $(() => {
 			e.preventDefault();
 			const data = FormHandler.getFormData(e);
 			$.ajax({
-				url: './api.php',
+				// eslint-disable-next-line no-undef
+				url: `${process.env.API_URL}/api.php`,
 				type: 'POST',
 				dataType: 'json',
 				data,

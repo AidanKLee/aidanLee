@@ -1,5 +1,7 @@
 const path = require('path');
+const Dotenv = require("dotenv-webpack");
 const ESLintPlugin = require('eslint-webpack-plugin');
+const TerserPlugin = require("terser-webpack-plugin");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
@@ -29,8 +31,7 @@ module.exports = {
 				test: /\.css$/i,
 				use: [
 					MiniCssExtractPlugin.loader,
-					'css-loader',
-					// 'style-loader'
+					'css-loader'
 				]
 			},
 			{
@@ -47,7 +48,8 @@ module.exports = {
 		minimize: true,
 		minimizer: [
 			new HtmlMinimizerPlugin(),
-			new CssMinimizerPlugin()
+			new CssMinimizerPlugin(),
+			new TerserPlugin()
 		],
 		runtimeChunk: 'single',
 		splitChunks: {
@@ -60,7 +62,10 @@ module.exports = {
 			title: 'GeoNames - A List of Popular API\'s',
 		}),
 		new ESLintPlugin(),
-		new MiniCssExtractPlugin()
+		new MiniCssExtractPlugin(),
+		new Dotenv({
+			systemvars: true
+		})
 	],
 	watch: true
 };
