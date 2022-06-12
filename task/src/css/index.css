@@ -152,6 +152,13 @@ select {
     overflow: hidden;
 }
 
+.none {
+    text-align: center;
+    font-weight: 500;
+    font-size: 1.2rem;
+    margin: 16px;
+}
+
 dialog#preloader {
     position: fixed;
     top: 50%;

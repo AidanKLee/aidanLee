@@ -41,24 +41,28 @@ class FormHandler {
 					response.data = [response.data];
 				}
 
-				// Create the list and put it within the results parent
-				const resultsList = $('<ol></ol>');
-				parentElement.append(resultsList);
+				if (response.data.length > 0) {
+					// Create the list and put it within the results parent
+					const resultsList = $('<ol></ol>');
+					parentElement.append(resultsList);
 
-				// Put each result in an li element
-				response.data.forEach(result => {
-					const resultElement = $('<li class="result"></li>');
-                    
-					// Map out every key value pair.
-					for (let key in result) {
-						const value = result[key];
-						const keyValue = ($('<div></div>'));
-						resultElement.append(keyValue);
-						keyValue.append($(`<h3>${Text.camelToTitle(key)}</h3>`));
-						keyValue.append($(`<p>${value}</p>`));
-					}
-					resultsList.append(resultElement);
-				});
+					// Put each result in an li element
+					response.data.forEach(result => {
+						const resultElement = $('<li class="result"></li>');
+						
+						// Map out every key value pair.
+						for (let key in result) {
+							const value = result[key];
+							const keyValue = ($('<div></div>'));
+							resultElement.append(keyValue);
+							keyValue.append($(`<h3>${Text.camelToTitle(key)}</h3>`));
+							keyValue.append($(`<p>${value}</p>`));
+						}
+						resultsList.append(resultElement);
+					});
+				} else {
+					parentElement.append($('<p class="none">There are no results that meet your search criteria.</p>'));
+				}
 			}
 
 			// Fade in the new parent element
