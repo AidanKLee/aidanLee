@@ -14,8 +14,10 @@
   "author": "Aidan Lee",
   "license": "ISC",
   "dependencies": {
+    "bootstrap": "^5.1.3",
     "dotenv": "^16.0.1",
-    "jquery": "^3.6.0"
+    "jquery": "^3.6.0",
+    "leaflet": "^1.8.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.5",

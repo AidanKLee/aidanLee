@@ -1,11 +1,20 @@
-import $ from 'jquery';
+import * as $ from 'jquery';
+import map from '../map';
+// import searchBar from '../searchBar';
+import * as bootstrap from 'bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
+import '../searchBar/searchBar.css';
+import TileSelect from '../tileSelect';
 
-$(() => {
-    const root = $('#root');
-    const hello = $('<h1>Hello World!</h1>');
-    const env = $(`<p>We are currently in ${process.env.NODE_ENV} mode!</p>`)
+$(async () => {
 
-    root.append(hello);
-    root.append(env);
+    map.render();
+
+    // new TileSelector({
+    //     map, 
+    //     id: 'tile-select',
+    //     dropdownId: 'tile-select-dropdown'
+    // }).render();
+
 });
