@@ -1,4 +1,4 @@
-import L from 'leaflet';
+import L, { LatLngBounds } from 'leaflet';
 import $ from 'jquery';
 
 class Map {
@@ -111,7 +111,6 @@ class Map {
 
     set tileSelector(selector) {
         if (selector instanceof TileSelector) {
-            console.log(this._tileSelector)
             if (!this._tileSelector) {
                 this._tileSelector = selector
             } else {
@@ -129,6 +128,53 @@ class Map {
     setView(x, y, z) {
         this.view.set(x, y, z);
         return this.view;
+    }
+
+    goTo(x, y) {
+        if (Map.areValidCoords(x, y)) {
+            this.map.flyTo([x, y], 12);
+        } else {
+            throw new Error('You must supply valid co-ordinates -180 to 180 for x (longitude) and -90 to 90 for y (latitude).');
+        }
+    }
+
+    goToBounds(bounds) {
+        if (bounds instanceof LatLngBounds) {
+            const NE = bounds.getNorthEast();
+            const SW = bounds.getSouthWest();
+            console.log(NE, SW)
+            this.map.flyToBounds(bounds)
+        }
+    }
+
+    handleMapRender() {
+        const location = navigator.geolocation;
+
+        location.getCurrentPosition(res => {
+            const { coords: { accuracy, latitude: x, longitude: y} } = res;
+            const circle = this.leaflet.circle([x, y], {
+                color: 'transparent',
+                opacity: .1,
+                radius: accuracy
+            })
+            circle.addTo(this.map);
+
+            const bounds = circle.getBounds();
+
+            this.map.addEventListener('zoomend', e => {
+                circle.setStyle({ color: '#0d6efd'})
+            })
+            
+            this.leaflet.marker([x, y]).addTo(this.map);
+       
+            this.goToBounds(bounds);
+        }, err => {
+            console.log(err)
+        }, { enableHighAccuracy: true })
+    }
+
+    static areValidCoords(x, y) {
+        return typeof x === 'number' && x >= -180 && x <= 180 && typeof y === 'number' && y >= -90 && y <= 90;
     }
 
     options(options = {}) {
@@ -150,16 +196,16 @@ class Map {
     }
 
     render(rerender) {
-        
         if (this.selectedTile instanceof Tile) {
             const { x, y, z } = this.view;
-            const { attribution, href, key, maxZoom, minZoom } = this.selectedTile;
+            const { attribution, href, key = '', maxZoom, minZoom } = this.selectedTile;
           
             if (!rerender) {
                 this._map = this.leaflet.map(this.parent).setView([x, y], z);
             }
 
-            this.leaflet.tileLayer(`${href}${key ? key : ''}`, {
+
+            this.leaflet.tileLayer(href + key, {
                 // attribution: attribution,
                 maxZoom: maxZoom,
                 minZoom: minZoom,
@@ -170,6 +216,7 @@ class Map {
 
             if (!rerender) {
                 document.querySelector('.leaflet-control-attribution').remove();
+                this.handleMapRender();
             }
 
             
@@ -404,6 +451,7 @@ class TileSelector {
     _parent = null;
     _toggle = $('<button class="btn btn-clear toggle" type="button" data-bs-toggle="collapse" data-bs-target="#tile-select-dropdown" aria-expanded="false" aria-controls="tile-select-dropdown"></button>');
     _images = {};
+    _timers = {};
 
     constructor(options = {}) {
         const { map, id, dropdownId } = options;
@@ -490,6 +538,7 @@ class TileSelector {
                 // this.render();
                 this._map.render(true);
             })
+
             button.append(tile.img);
             this.dropdown.append(button);
         }

@@ -1,4 +1,4 @@
-import Map, { Tile } from "../map/map";
+import Map, { Tile } from "../map/Map";
 import $ from 'jquery';
 import '../tileSelect/tileSelect.css';
 

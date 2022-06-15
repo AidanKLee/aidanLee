@@ -38,11 +38,11 @@ const tiles = [
 ]
 
 // New Map initialisation
-const map = new Map({
+const xPlore = new Map({
     parent: 'map',
     tiles,
     selector: 'tile-select',
     selectorDropdown: 'tile-select-dropdown'
 });
 
-export default map;
+export default xPlore;
