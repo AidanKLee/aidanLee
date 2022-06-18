@@ -38,17 +38,22 @@ div.leaflet-control-attribution {
 div.controls {
     position: absolute;
     z-index: 1000;
+    transition: .3s;
+}
+
+div.controls.hide {
+    opacity: 0;
+    pointer-events: none;
 }
 
 div.controls.bottom-centre {
-    width: calc(100% - 156px);
-    max-width: fit-content;
-    left: 96px;
+    width: 100%;
+    left: 0;
     bottom: 0;
-    margin-bottom: 8px;
 }
 
 div.controls.bottom-left {
+    max-width: calc(100% - 68px);
     bottom: 0;
     left: 0;
     margin-left: 8px;
@@ -60,8 +65,21 @@ div.controls.bottom-right {
     right: 0;
     margin-right: 8px;
     margin-bottom: 8px;
-    display: flex;
-    flex-direction: column;
+}
+
+div.controls.bottom-right button {
+    height: fit-content;
+    width: fit-content;
+    display: block;
+}
+
+div.controls.bottom-right > button {
+    border: 2px solid var(--bs-gray-500) !important;
+}
+
+div.controls.bottom-right svg {
+    height: 24px;
+    width: 24px;
 }
 
 div.controls.top {
@@ -83,10 +101,12 @@ div.controls.top > .left {
 /* Base Layer Controls */
 /* ######################################################### */
 div#base-layer-control {
-    width: 80px
+    width: 44px;
+    margin-bottom: 16px;
 }
 
 div#base-layer-control .btn {
+    box-sizing: border-box;
     padding: 0;
     overflow: hidden;
     border: 2px solid var(--bs-gray-500) !important;
@@ -95,11 +115,12 @@ div#base-layer-control .btn {
 div#base-layer-control label.btn {
     display: block;
     border-radius: 50%;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
     width: fit-content;
 }
 
 div#base-layer-control button.btn {
+    width: 100%;
     border-radius: 8px;
 }
 
@@ -108,14 +129,15 @@ div#base-layer-control input {
 }
 
 div#base-layer-control img {
-    height: 72px;
-    width: auto;
+    height: auto;
+    width: 100%;
 }
 
 /* ######################################################### */
 /* Zoom Controls /*
 /* ######################################################### */
 div#zoom-control {
+    margin-top: 8px;
     overflow: hidden;
 }
 
@@ -208,7 +230,7 @@ div#search-results button {
 /* Bottom Centre Address Details /*
 /* ######################################################### */
 
-div.controls.bottom-centre .alert {
+div.controls.bottom-left .alert {
     margin: 0;
     background-color: rgba(248,249,250,.6);
     color: var(--bs-gray-900);
@@ -216,15 +238,15 @@ div.controls.bottom-centre .alert {
     transition: .3s;
 }
 
-div.controls.bottom-centre .alert:hover {
+div.controls.bottom-left .alert:hover {
     background-color: rgba(248,249,250,.8);
 }
 
-div.controls.bottom-centre .alert svg {
+div.controls.bottom-left .alert svg {
     min-width: 24px;
 }
 
-div.controls.bottom-centre .alert div {
+div.controls.bottom-left .alert > div {
     margin-left: 16px;
     font-weight: 500;
     font-size: .7rem;
