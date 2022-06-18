@@ -1,4 +1,4 @@
-import L, { LatLngBounds } from 'leaflet';
+import L, { bounds, LatLngBounds } from 'leaflet';
 import $ from 'jquery';
 
 class Map {
@@ -140,9 +140,6 @@ class Map {
 
     goToBounds(bounds) {
         if (bounds instanceof LatLngBounds) {
-            const NE = bounds.getNorthEast();
-            const SW = bounds.getSouthWest();
-            console.log(NE, SW)
             this.map.flyToBounds(bounds)
         }
     }
@@ -164,7 +161,7 @@ class Map {
             this.map.addEventListener('zoomend', e => {
                 circle.setStyle({ color: '#0d6efd'})
             })
-            
+
             this.leaflet.marker([x, y]).addTo(this.map);
        
             this.goToBounds(bounds);
@@ -201,15 +198,22 @@ class Map {
             const { attribution, href, key = '', maxZoom, minZoom } = this.selectedTile;
           
             if (!rerender) {
-                this._map = this.leaflet.map(this.parent).setView([x, y], z);
+                this._map = this.leaflet.map(this.parent, {
+                    maxZoom: maxZoom,
+                    minZoom: minZoom,
+                    maxBounds: [
+                        //south west
+                        [-90, -180],
+                        //north east
+                        [90, 180]
+                    ],
+                    maxBoundsViscosity: 1.0
+                }).setView([x, y], z);
             }
 
 
             this.leaflet.tileLayer(href + key, {
                 // attribution: attribution,
-                maxZoom: maxZoom,
-                minZoom: minZoom,
-                preferCanvas: true
             }).addTo(this.map);
 
             this.tileSelector.render();

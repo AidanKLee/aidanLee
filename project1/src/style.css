@@ -1,0 +1,231 @@
+@import './fonts.css';
+/* ######################################################### */
+/* Global */
+/* ######################################################### */
+* {
+    font-family: 'Poppins', 'DM Sans', Arial, Helvetica, sans-serif;
+    box-sizing: border-box;
+    outline: 0 none transparent;
+    border: 0 none transparent;
+    margin: 0;
+    padding: 0;
+}
+
+.shadows {
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,.4));
+}
+
+.shadows-light {
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,.2));
+}
+
+/* ######################################################### */
+/* Top Layer */
+/* ######################################################### */
+div#root {
+    position: relative;
+}
+
+div#map {
+    min-height: 100vh;
+    min-width: 100vw;
+}
+
+div.leaflet-control-attribution {
+    display: none;
+}
+
+div.controls {
+    position: absolute;
+    z-index: 1000;
+}
+
+div.controls.bottom-centre {
+    width: calc(100% - 156px);
+    max-width: fit-content;
+    left: 96px;
+    bottom: 0;
+    margin-bottom: 8px;
+}
+
+div.controls.bottom-left {
+    bottom: 0;
+    left: 0;
+    margin-left: 8px;
+    margin-bottom: 8px;
+}
+
+div.controls.bottom-right {
+    bottom: 0;
+    right: 0;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+div.controls.top {
+    width: 100%;
+    max-width: 456px;
+    top: 0;
+    left: 0;
+    padding: 8px 8px 0;
+    display: flex;
+    justify-content: space-between;
+}
+
+div.controls.top > .left {
+    width: 100%;
+    max-width: 440px;
+}
+
+/* ######################################################### */
+/* Base Layer Controls */
+/* ######################################################### */
+div#base-layer-control {
+    width: 80px
+}
+
+div#base-layer-control .btn {
+    padding: 0;
+    overflow: hidden;
+    border: 2px solid var(--bs-gray-500) !important;
+}
+
+div#base-layer-control label.btn {
+    display: block;
+    border-radius: 50%;
+    margin-bottom: 4px;
+    width: fit-content;
+}
+
+div#base-layer-control button.btn {
+    border-radius: 8px;
+}
+
+div#base-layer-control input {
+    display: none;
+}
+
+div#base-layer-control img {
+    height: 72px;
+    width: auto;
+}
+
+/* ######################################################### */
+/* Zoom Controls /*
+/* ######################################################### */
+div#zoom-control {
+    overflow: hidden;
+}
+
+div#zoom-control .btn {
+    padding: 8px;
+    overflow: hidden;
+    border: 2px solid var(--bs-gray-500) !important;
+}
+
+div#zoom-control .btn-light {
+    color: var(--bs-gray-700);
+}
+
+div#zoom-control .btn-light:hover {
+    background-color: var(--bs-gray-200);
+    color: var(--bs-gray-800);
+}
+
+/* ######################################################### */
+/* Other Buttons /*
+/* ######################################################### */
+
+button.round {
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 50%;
+}
+
+/* ######################################################### */
+/* Search Bar /*
+/* ######################################################### */
+
+input#q {
+    max-width: 100%;
+    transition: .5s;
+}
+
+input#q:focus {
+    max-width: 100%;
+    padding: 6px 12px;
+}
+
+/* div#search-bar-container {
+    margin-bottom: 8px;
+} */
+
+div#search-bar {
+    position: relative;
+    z-index: 2;
+}
+
+div#search-results {
+    z-index: 1;
+    position: relative;
+    /* margin-bottom: 8px; */
+}
+
+div#search-results button {
+    font-size: .7rem;
+}
+
+@media screen and (max-width: 456px) {
+
+    input#q {
+        max-width: 0;
+        padding: 6px 0;
+    }
+}
+
+/* ######################################################### */
+/* Toast /*
+/* ######################################################### */
+
+.toast-container {
+    width: 100% !important;
+    max-width: none !important;
+}
+
+.toast-container img {
+    height: 20px;
+    width: auto;
+}
+
+.toast-container div.toast {
+    min-width: 100%;
+    box-shadow: 0 0 0 transparent;
+}
+
+/* ######################################################### */
+/* Bottom Centre Address Details /*
+/* ######################################################### */
+
+div.controls.bottom-centre .alert {
+    margin: 0;
+    background-color: rgba(248,249,250,.6);
+    color: var(--bs-gray-900);
+    backdrop-filter: blur(4px);
+    transition: .3s;
+}
+
+div.controls.bottom-centre .alert:hover {
+    background-color: rgba(248,249,250,.8);
+}
+
+div.controls.bottom-centre .alert svg {
+    min-width: 24px;
+}
+
+div.controls.bottom-centre .alert div {
+    margin-left: 16px;
+    font-weight: 500;
+    font-size: .7rem;
+}

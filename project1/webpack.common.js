@@ -1,10 +1,11 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 module.exports = {
     entry: {
         index: {
-            import: './src/app/index.js'
+            import: './src/index.js'
         }
     },
     output: {
@@ -17,6 +18,12 @@ module.exports = {
             title: 'Output Management',
             template: path.resolve(__dirname, 'index.html')
         }),
+        new CleanWebpackPlugin({
+            root: process.cwd(),
+            verbose: true,
+            dry: false,
+            cleanOnceBeforeBuildPatterns: ['**/*', '!php/**/*']
+        })
     ],
     module: {
         rules: [
