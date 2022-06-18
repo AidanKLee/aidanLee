@@ -1,6 +1,6 @@
 import $ from 'jquery';
 
-class FormHandler {
+class K {
 
 	static getInputData(inputEvent, callback) {
 		if (inputEvent.type === 'input' && inputEvent.target.tagName === 'INPUT') {
@@ -36,7 +36,7 @@ class FormHandler {
 
 			return data;
 		} else {
-			throw new Error('getFormHandler requires a form submit event as its first arguement.');
+			throw new Error('getK requires a form submit event as its first arguement.');
 		}
 	}
 
@@ -68,7 +68,7 @@ class FormHandler {
 							const value = result[key];
 							const keyValue = ($('<div></div>'));
 							resultElement.append(keyValue);
-							keyValue.append($(`<h3>${FormHandler.camelToTitle(key)}</h3>`));
+							keyValue.append($(`<h3>${K.camelToTitle(key)}</h3>`));
 							keyValue.append($(`<p>${value}</p>`));
 						}
 						resultsList.append(resultElement);
@@ -91,4 +91,4 @@ class FormHandler {
 
 }
 
-export default FormHandler;
+export default K;

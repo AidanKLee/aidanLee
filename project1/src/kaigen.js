@@ -1,6 +1,12 @@
 import $ from 'jquery';
 
-class FormHandler {
+class K {
+
+	static camelToTitle(text) {
+		const result = text.replace(/([A-Z])/g, ' $1');
+		const finalResult = result.charAt(0).toUpperCase() + result.slice(1);
+		return finalResult;
+	}
 
 	static getInputData(inputEvent, callback) {
 		if (inputEvent.type === 'input' && inputEvent.target.tagName === 'INPUT') {
@@ -36,7 +42,7 @@ class FormHandler {
 
 			return data;
 		} else {
-			throw new Error('getFormHandler requires a form submit event as its first arguement.');
+			throw new Error('getK requires a form submit event as its first arguement.');
 		}
 	}
 
@@ -68,7 +74,7 @@ class FormHandler {
 							const value = result[key];
 							const keyValue = ($('<div></div>'));
 							resultElement.append(keyValue);
-							keyValue.append($(`<h3>${FormHandler.camelToTitle(key)}</h3>`));
+							keyValue.append($(`<h3>${K.camelToTitle(key)}</h3>`));
 							keyValue.append($(`<p>${value}</p>`));
 						}
 						resultsList.append(resultElement);
@@ -83,12 +89,48 @@ class FormHandler {
 		}, 500);
 	}
 
-	static camelToTitle(text) {
-		const result = text.replace(/([A-Z])/g, ' $1');
-		const finalResult = result.charAt(0).toUpperCase() + result.slice(1);
-		return finalResult;
+	static farToCel(f) {
+		return  5 / 9 * (f - 32)
+	}
+
+	static farToKel(f) {
+		return 273.15 + ((5 * (f - 32)) / 9)
+	}
+
+	static kelToCel(k) {
+		return k - 273.15;
+	}
+
+	static kelToFar(k) {
+		return 1.8 * (k - 273) + 32;
+	}
+
+	static celToFar(c) {
+		return 9 / 5 + 32;
+	}
+
+	static celToKel(c) {
+		return c + 273.15;
+	}
+
+	static pajax(url, options = {}) {
+		const { data, method, type} = options;
+		return new Promise((res, rej) => {
+			$.ajax({
+				data,
+				dataType: type,
+				type: method,
+				url,
+				success: response => {
+					res(response);
+				},
+				error: (jqXHR, textStatus, err) => {
+					rej({jqXHR, textStatus, err})
+				}
+			})
+		}) 
 	}
 
 }
 
-export default FormHandler;
+export default K;

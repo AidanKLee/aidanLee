@@ -19,6 +19,10 @@
     filter: drop-shadow(2px 2px 2px rgba(0,0,0,.2));
 }
 
+.placeholder-glow span {
+    border-radius: 4px;
+}
+
 /* ######################################################### */
 /* Top Layer */
 /* ######################################################### */
@@ -227,15 +231,17 @@ div#search-results button {
 }
 
 /* ######################################################### */
-/* Bottom Centre Address Details /*
+/* Bottom left Address Details /*
 /* ######################################################### */
 
 div.controls.bottom-left .alert {
+    min-height: 58px;
     margin: 0;
     background-color: rgba(248,249,250,.6);
     color: var(--bs-gray-900);
     backdrop-filter: blur(4px);
     transition: .3s;
+    padding: 8px 16px;
 }
 
 div.controls.bottom-left .alert:hover {
@@ -249,5 +255,50 @@ div.controls.bottom-left .alert svg {
 div.controls.bottom-left .alert > div {
     margin-left: 16px;
     font-weight: 500;
-    font-size: .7rem;
+    font-size: .8rem;
+}
+
+div.controls.bottom-left .alert .placeholders {
+    width: 100vw;
+    max-width: 320px;
+}
+
+div.controls.bottom-left .alert .placeholder-glow {
+    display: block;
+    height: .8rem;
+    margin-bottom: .4rem;
+    width: 100%;
+}
+
+div.controls.bottom-left .alert .placeholder-glow:last-of-type {
+    width: 75%;
+}
+
+/* ######################################################### */
+/* Bottom left Weather Info /*
+/* ######################################################### */
+
+button#weather-container {
+    background-color: rgba(248,249,250,.6);
+    backdrop-filter: blur(4px);
+}
+
+button#weather-container span {
+    line-height: 1;
+}
+
+button#weather-container img {
+    width: 50px;
+    height: 50px;
+}
+
+button#weather-container .placeholder-glow {
+    width: 50px;
+    height: 50px;
+    padding: 8px
+}
+
+button#weather-container .placeholder-glow span {
+    height: 100%;
+    width: 100%;
 }

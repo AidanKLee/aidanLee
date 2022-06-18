@@ -1,7 +1,7 @@
 import * as $ from 'jquery';
 import * as L from 'leaflet';
 import * as bootstrap from 'bootstrap';
-import FormHandler from './formHandler';
+import K from './kaigen';
 
 import logo from './assets/images/logo192.png';
 import primary from './assets/images/primary.png';
@@ -10,7 +10,6 @@ import dark from './assets/images/dark.png';
 import satellite from './assets/images/satellite.png';
 
 import './style.css';
-// import './leaflet.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 $(() => {
@@ -377,7 +376,7 @@ $(() => {
                 resultElement.on('click', e => {
                     const { lat, lng } = latLng;
                     getCurrentAddress(lat, lng, data => {
-                        newToast({name: 'XPlore', src: logo, text: `Going to ${data.results[0].formatted}.`});
+                        newToast({name: 'XPlore', src: logo, text: `Moved to ${data.results[0].formatted}.`});
                     })
                     goToLocation(latLng, latLngBounds);
                 })
@@ -454,7 +453,7 @@ $(() => {
         // Set timeout and function to call the API
         timeout = setTimeout(() => {
             // Get data from the event
-            const data = FormHandler.getInputData(e);
+            const data = K.getInputData(e);
             // Make API calls
             $.when(autocompleteAddresses(data)).then((addresses, businesses) => {
                 renderResults(addresses.data.features || [], addresses.data.query || {})
@@ -525,12 +524,52 @@ $(() => {
     }
 
     // ############################################################
+    // Centre Weather
+    // ############################################################
+    // Create and append the weather container/button
+    const weatherContainer = $('<button id="weather-container" class="btn btn-light mb-1 rounded d-flex align-items-center"></button>');
+    const weatherIcon = $(`<img src="" alt="" />`);
+    const weatherholder = '<div class="placeholder-glow"><span class="placeholder col-12"></span></div>';
+    const weatherholder2 = weatherholder.slice();
+    weatherContainer.append(weatherholder);
+    weatherContainer.append(weatherholder2);
+    bottomLeftControls.prepend(weatherContainer);
+
+    // Method to render the weather
+    const renderWeather = async data => {
+        const { description, feels_like, humidity, icon, pressure, temp: t, temp_max, temp_min } = data;
+        
+        // Turn the image into a URLObject
+        let img = await fetch(`http://openweathermap.org/img/w/${icon}.png`);
+        img = await img.blob();
+        img = URL.createObjectURL(img);
+        
+        // Clear the weather container
+        weatherContainer.empty();
+
+        // Extract the icon change src and alt
+        weatherIcon.attr('src', img);
+        weatherIcon.attr('alt', description);
+        weatherContainer.append(weatherIcon);
+
+        // Extract the temperature and append it
+        const temp = $(`<span class="fs-1 bold ms-2">${Math.round(K.kelToCel(t))}<sup class="fs-6">°C</sup></span>`);
+        weatherContainer.append(temp);
+    }
+
+    // ############################################################
     // Centre Address
     // ############################################################
     // Create a bootstrap alert and append it to the bottom centre
     const currentAddressMarker = $('<div class="alert alert-light d-flex align-items-center border shadows-light" role="alert"></div>');
     const icon ='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-map-pin"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>';
+    const placeholder = '<div class="placeholder-glow"><span class="placeholder col-12"></span></div>';
+    const placeholder2 = placeholder.slice();
+    const placeholders = $('<div class="placeholders"></div>');
     currentAddressMarker.html(icon);
+    placeholders.append(placeholder);
+    placeholders.append(placeholder2);
+    currentAddressMarker.append(placeholders);
     bottomLeftControls.append(currentAddressMarker);
     let centre = {};
 
@@ -586,17 +625,52 @@ $(() => {
         }
     }
 
+    // Get weather data
+    const getWeather = (lat, lng, cb) => {
+        $.ajax({
+            url: process.env.BACKEND_HOST + '/weather.php',
+            type: 'GET',
+            dataType: 'json',
+            data: { lat, lng },
+            success: (res) => {
+                const weather = {
+                    ...res.data.weather[0], ...res.data.main
+                }
+                cb(weather);
+            },
+            error: (jqXHR, textStatus, err) => {
+                // preloader.fadeOut(1000);
+                console.error(jqXHR);
+                console.error(textStatus);
+                console.error(err);
+            }
+        })
+    }
+
     // Event listener to change address on alert element when the map stops moving
+    // Timeout to reduce the amount of calls when moving the viewport
+    let moveTimeout = null;
+
     map.addEventListener('moveend', e => {
-        let { lat, lng } = map.getCenter();
-        getCurrentAddress(lat, lng, data => {
-            centre.data = data.results[0];
-            appendAlertAddress(data);
-            getCountryData(data.results[0].country_code, true, data => {
-                centre.country = data;
-                console.log(centre)
-            })
-        });
+        if (moveTimeout) {
+            clearTimeout(moveTimeout);
+        }
+
+        moveTimeout = setTimeout(() => {
+            let { lat, lng } = map.getCenter();
+            getCurrentAddress(lat, lng, data => {
+                console.log('calling the function')
+                centre.data = data.results[0];
+                appendAlertAddress(data);
+                getCountryData(data.results[0].country_code, true, data => {
+                    centre.country = data;
+                })
+                getWeather(lat, lng, data => {
+                    centre.temperature = data;
+                    renderWeather(data);
+                })
+            });
+        }, 1000);
     })
 
     // ############################################################
