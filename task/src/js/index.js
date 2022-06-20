@@ -1,5 +1,5 @@
 import countryList from './countryList.js';
-import FormHandler from '../modules/formHandler.js';
+import K from '../modules/K.js';
 import logo from '../media/images/logo.png';
 import $ from '../modules/jquery/jquery.min.js';
 import '../css/index.css';
@@ -43,7 +43,7 @@ $(() => {
 		$(this).on('submit', e => {
 			preloader.fadeIn(1000);
 			e.preventDefault();
-			const data = FormHandler.getFormData(e);
+			const data = K.getFormData(e);
 			$.ajax({
 				// eslint-disable-next-line no-undef
 				url: `${process.env.API_URL}/api.php`,
@@ -52,7 +52,7 @@ $(() => {
 				data,
 				success: (res) => {
 					const selector = '#results';
-					FormHandler.handleResponse(res, selector);
+					K.handleResponse(res, selector);
 					preloader.fadeOut(1000);
 				},
 				error: (jqXHR, textStatus, err) => {

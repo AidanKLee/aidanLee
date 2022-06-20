@@ -23,6 +23,10 @@
     border-radius: 4px;
 }
 
+.fw-semibold {
+    font-weight: 500 !important;
+}
+
 /* ######################################################### */
 /* Top Layer */
 /* ######################################################### */
@@ -62,6 +66,11 @@ div.controls.bottom-left {
     left: 0;
     margin-left: 8px;
     margin-bottom: 8px;
+    transition: .3s;
+}
+
+div.controls.bottom-left.hide {
+    opacity: 0;
 }
 
 div.controls.bottom-right {
@@ -94,11 +103,23 @@ div.controls.top {
     padding: 8px 8px 0;
     display: flex;
     justify-content: space-between;
+    z-index: 1001;
+}
+
+div.controls.top.show {
+    opacity: 1 !important;
 }
 
 div.controls.top > .left {
     width: 100%;
     max-width: 440px;
+}
+
+/* ######################################################### */
+/* Custom Tooltips /*
+/* ######################################################### */
+.tooltip {
+    --bs-tooltip-bg: var(--bs-gray-200);
 }
 
 /* ######################################################### */
@@ -143,12 +164,14 @@ div#base-layer-control img {
 div#zoom-control {
     margin-top: 8px;
     overflow: hidden;
+    border-radius: 16px;
+    border: 2px solid var(--bs-gray-500) !important;
 }
 
 div#zoom-control .btn {
     padding: 8px;
     overflow: hidden;
-    border: 2px solid var(--bs-gray-500) !important;
+    border: 0 none transparent !important;
 }
 
 div#zoom-control .btn-light {
@@ -179,14 +202,15 @@ input#q {
     transition: .5s;
 }
 
-input#q:focus {
+input#q.show {
     max-width: 100%;
     padding: 6px 12px;
 }
 
-/* div#search-bar-container {
-    margin-bottom: 8px;
-} */
+input#q:focus {
+    max-width: 100%;
+    padding: 6px 12px;
+}
 
 div#search-bar {
     position: relative;
@@ -196,7 +220,6 @@ div#search-bar {
 div#search-results {
     z-index: 1;
     position: relative;
-    /* margin-bottom: 8px; */
 }
 
 div#search-results button {
@@ -242,6 +265,11 @@ div.controls.bottom-left .alert {
     backdrop-filter: blur(4px);
     transition: .3s;
     padding: 8px 16px;
+    border-radius: 16px;
+}
+
+div.controls.bottom-left .alert.show {
+    width: 100%;
 }
 
 div.controls.bottom-left .alert:hover {
@@ -278,27 +306,215 @@ div.controls.bottom-left .alert .placeholder-glow:last-of-type {
 /* Bottom left Weather Info /*
 /* ######################################################### */
 
-button#weather-container {
+div#weather-container {
     background-color: rgba(248,249,250,.6);
     backdrop-filter: blur(4px);
+    border-radius: 16px !important;
+    width: fit-content;
 }
 
-button#weather-container span {
+div#weather-container:hover {
+    background-color: rgba(248,249,250,.8);
+}
+
+div#weather-container span {
     line-height: 1;
 }
 
-button#weather-container img {
+div#weather-container img {
     width: 50px;
     height: 50px;
 }
 
-button#weather-container .placeholder-glow {
+div#weather-container .placeholder-glow {
     width: 50px;
     height: 50px;
     padding: 8px
 }
 
-button#weather-container .placeholder-glow span {
+div#weather-container .placeholder-glow span {
     height: 100%;
     width: 100%;
+}
+
+/* ######################################################### */
+/* More Info /*
+/* ######################################################### */
+
+div#more-info-menu {
+    max-width: 456px;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(248,249,250,.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    transition: .5s;
+}
+
+div#more-info-menu:hover {
+    background-color: rgba(248,249,250,.8);
+}
+
+div#more-info-menu.show {
+    display: flex;
+}
+
+div#more-info-menu.collapsing {
+    display: flex;
+}
+
+div#more-info-menu #info {
+    position: relative;
+    padding-top: 54px;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+div#more-info-menu header {
+    font-weight: 500 !important;
+}
+
+div#more-info-menu header h1 {
+    display: inline-block;
+    word-wrap: break-word;
+}
+
+div#more-info-menu div.modal-body {
+    height: calc(100% - 117px);
+    flex: 1 1;
+    overflow-y: auto;
+}
+
+div#more-info-menu div.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+div#more-info-menu div.modal-body::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,.1);
+    border-radius: 4px;
+}
+
+div#more-info-menu div.modal-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(0,0,0,.15);
+}
+
+div#more-info-menu p {
+    font-size: .8rem;
+}
+
+div#more-info-menu .weather {
+    width: 100%;
+    margin: 0 auto;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: inset 4px 4px 4px rgba(0, 0, 0, 0.1);
+    min-height: 176px;
+}
+
+div#more-info-menu .weather img {
+    width: 100%;
+    height: auto;
+    margin: -8px 0 -16px;
+}
+
+div#more-info-menu .weather .day {
+    font-weight: 500;
+}
+
+div#more-info-menu .weather .temp {
+    font-size: 1.6rem
+}
+
+div#more-info-menu .weather .temp sup {
+    font-size: 1rem;
+}
+
+div#more-info-menu .weather .left {
+    flex: 1 0 33%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 16px 0 16px 0;
+}
+
+div#more-info-menu .weather .left img {
+    margin: -20px 0 -40px;
+}
+
+div#more-info-menu .weather .right {
+    flex: 2 2 66%;
+    display: flex;
+    flex-direction: column;
+    padding-top: 8px;
+}
+
+div#more-info-menu .weather .right .top {
+    flex: 2;
+}
+
+div#more-info-menu .weather .right .top div {
+    flex: 1 1;
+    text-align: center;
+    margin: auto;
+}
+
+div#more-info-menu .weather .right .bottom {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 4px 0;
+    row-gap: 0px;
+    height: fit-content;
+}
+
+div#more-info-menu .weather .right .bottom p {
+    font-weight: 500;
+    margin-bottom: 0;
+    margin-right: 8px;
+}
+
+/* ######################################################### */
+/* Exchange Rates /*
+/* ######################################################### */
+
+div.select-rates input {
+    width: 88px;
+    background-color: transparent;
+    font-weight: 500;
+}
+
+
+@media screen and (max-width: 456px) {
+    div#more-info-menu .weather .temp {
+        font-size: 5vw;
+    }
+    
+    div#more-info-menu .weather .left .temp {
+        font-size: 1.6rem;
+    }
+
+    div#more-info-menu .weather .temp sup {
+        font-size: 3vw;
+    }
+
+    div#more-info-menu .weather .left .temp sup {
+        font-size: 1rem;
+    }
+
+    div#more-info-menu .weather img {
+        margin: -2vw 0 -4vw;
+    }
+
+    div#more-info-menu .weather .left img {
+        margin: -5vw 0 -10vw;
+    }
 }

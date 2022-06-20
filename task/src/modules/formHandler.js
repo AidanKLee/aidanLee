@@ -1,7 +1,7 @@
 import $ from '../modules/jquery/jquery.min.js';
 import Text from './Text.js';
 
-class FormHandler {
+class K {
 
 	static getFormData(formEvent, callback) {
 		const target = formEvent.currentTarget;
@@ -23,7 +23,7 @@ class FormHandler {
 
 			return data;
 		} else {
-			throw new Error('getFormHandler requires a form submit event as its first arguement.');
+			throw new Error('getK requires a form submit event as its first arguement.');
 		}
 	}
 
@@ -72,4 +72,4 @@ class FormHandler {
 
 }
 
-export default FormHandler;
+export default K;
