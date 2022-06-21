@@ -10,8 +10,52 @@ import dark from './assets/images/dark.png';
 import satellite from './assets/images/satellite.png';
 import currencies from './assets/js/currencies';
 
+import esri from './assets/images/attribution/esriworldimages.png';
+import geoapify from './assets/images/attribution/geoapify.png';
+import geonames from './assets/images/attribution/geonames.png';
+import jawg from './assets/images/attribution/jawgmaps.png';
+import leafletjs from './assets/images/attribution/leafletjs.png';
+import openexchange from './assets/images/attribution/openexchangerates.png';
+import openweather from './assets/images/attribution/openweather.png';
+import thunderforest from './assets/images/attribution/thunderforest.png';
+
 import './style.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+
+const attributions = {
+    esri: {
+        img: esri,
+        href: 'https://www.esri.com'
+    },
+    geoapify: {
+        img: geoapify,
+        href: 'https://www.geoapify.com'
+    },
+    geonames: {
+        img: geonames,
+        href: 'https://www.geonames.org'
+    },
+    jawg: {
+        img: jawg,
+        href: 'http://jawg.io'
+    },
+    leaflet: {
+        img: leafletjs,
+        href: 'https://leafletjs.com'
+    },
+    openExchange: {
+        img: openexchange,
+        href: 'https://openexchangerates.org'
+    },
+    openWeather: {
+        img: openweather,
+        href: 'https://www.openweather.org'
+    },
+    thunderforest: {
+        img: thunderforest,
+        href: 'https://www.thunderforest.com'
+    }
+}
 
 $(() => {
     // ############################################################
@@ -161,7 +205,13 @@ $(() => {
     const population = $(`<p class="mb-0"></p>`);
     const areaSqKm = $(`<p></p>`);
     const menuWeather = $(`<div class="weather d-flex border mb-3"></div>`);
-    const currencyList = $(`<div class="currency"></div>`);
+    const currencyList = $(`<div class="currency mb-3"></div>`);
+    const wikis = $(`<div class="wiki"></div>`);
+
+    const infoFooter = $('<div class="modal-footer d-block"></div>');
+    const powered = $(`<p class="fw-bold text-center">Powered By</p>`);
+    const attrib = $(`<div id="attribution" class ="d-flex justify-content-center"></div>`);
+
 
     // Event listeners to toggle the menu
     moreInfo.on('click', e => {
@@ -176,6 +226,7 @@ $(() => {
 
     info.append(infoHeader);
     info.append(infoBody);
+    info.append(infoFooter);
 
     infoHeader.append(infoHeaderText);
     infoHeader.append(infoClose);
@@ -192,6 +243,16 @@ $(() => {
     infoBody.append(menuWeather);
 
     infoBody.append(currencyList);
+
+    infoBody.append(wikis);
+
+    infoFooter.append(powered);
+    infoFooter.append(attrib);
+
+    for (let name in attributions) {
+        let {img, href} = attributions[name];
+        attrib.append($(`<a href="${href}" class="d-flex justify-content-center" target="_blank" title="${K.camelToTitle(name)}"><img src="${img}" alt="${K.camelToTitle(name)}" /></a>`));
+    }
 
     root.append(moreInfoMenu);
 
@@ -265,7 +326,7 @@ $(() => {
 
         currencyList.empty();
 
-        const base = $(`<h2 class="d-flex align-items-center">${currency} <span class="badge rounded-pill bg-primary fw-semibold fs-6 ms-2">${currencies[currency]}</span></h2>`);
+        const base = $(`<h2 class="d-flex align-items-center overflow-hidden">${currency} <span class="d-inline badge rounded-pill bg-primary fw-semibold fs-6 ms-2">${currencies[currency]}</span></h2>`);
 
         const selectRates = $(`<div class='select-rates'></div>`);
 
@@ -292,6 +353,31 @@ $(() => {
         currencyList.append(selectRates);
     }
 
+    const renderWikis = async entries => {
+        // console.log(entries)
+        wikis.empty();
+        const carousel = $(`<div id="wiki" class="carousel carousel-dark slide" data-bs-ride="true"></div>`);
+        const indicators = $(`<div class="carousel-indicators">`);
+        const inner = $(`<div class="carousel-inner">`);
+        const prev = $(`<button class="carousel-control-prev" type="button" data-bs-target="#wiki" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="false"></span><span class="visually-hidden">Previous</span></button>`);
+        const next = $(`<button class="carousel-control-next" type="button" data-bs-target="#wiki" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="false"></span><span class="visually-hidden">Next</span></button>`);
+
+        wikis.append(carousel);
+        [indicators, inner, prev, next].forEach(part => carousel.append(part));
+
+        console.log(entries)
+
+        entries.forEach((entry,i) => {
+            const indicator = $(`<button type="button" data-bs-target="#wiki" data-bs-slide-to="${i}"${i===0 ? ' class="active" aria-current="true"' : ''} aria-label="Slide 1"></button>`)
+            const card = $(`<figure class="card px-5 pb-3 rounded-3 bg-light bg-gradient carousel-item${i === 0 ? ' active' : ''}"></figure>`);
+            const text = $(`<div class="card-body"><h5 class="card-title">${entry.title}</h5><p class="card-text">${entry.summary}</p><a class="stretched-link" href=${`https://${entry.wikipediaUrl}`} target="_blank" class="row g-0"><p class="card-text"><small class="text-muted">${entry.wikipediaUrl}</small></p></a></div>`);
+
+            indicators.append(indicator);
+            inner.append(card);
+            card.append(text);
+        })
+    }
+
     // ############################################################
     // Navigation Button
     // ############################################################
@@ -310,7 +396,11 @@ $(() => {
 
     // On button click go to the users location
     myLocation.on('click', e => {
-        goToUserLocation();
+        if (!found || !location) {
+            handleNoLocation()
+        } else {
+            goToUserLocation();
+        }
     })
 
     // Change the my location marker to found
@@ -755,7 +845,7 @@ $(() => {
     // Get information about the current country
     let currentCountry = '';
     const getCountryData = (country, isCentre, cb) => {
-        if (country.toLowerCase() !== currentCountry.toLowerCase()) {
+        if (country && country.toLowerCase() !== currentCountry.toLowerCase()) {
             if (isCentre) { 
                 currentCountry = country;
                 $.ajax({
@@ -858,6 +948,28 @@ $(() => {
         })
     }
 
+    const getWiki = (latLngBounds, cb) => {
+        const n = latLngBounds.getNorth();
+        const e = latLngBounds.getEast();
+        const s = latLngBounds.getSouth();
+        const w = latLngBounds.getWest(); 
+        $.ajax({
+            url: process.env.BACKEND_HOST + '/wikipedia.php',
+            type: 'GET',
+            dataType: 'json',
+            data: { n, e, s, w },
+            success: (res) => {
+                cb(res.data);
+            },
+            error: (jqXHR, textStatus, err) => {
+                // preloader.fadeOut(1000);
+                console.error(jqXHR);
+                console.error(textStatus);
+                console.error(err);
+            }
+        })
+    }
+
     // Event listener to change address on alert element when the map stops moving
     // Timeout to reduce the amount of calls when moving the viewport
     let moveTimeout = null;
@@ -868,35 +980,44 @@ $(() => {
         }
 
         moveTimeout = setTimeout(() => {
-            let { lat, lng } = map.getCenter();
-            getCurrentAddress(lat, lng, data => {
-                centre.data = data.results[0];
-                appendAlertAddress(data);
-                populateMenuAddress(data.results[0]);
-                getCountryData(data.results[0].country_code, true, data => {
-                    centre.country = data;
-                    populateCountryData(data);
-                    getExchangeRates(data.currencyCode, data => {
-                        renderExchangeRates(data)
-                    })
-                })
-                getWeather(lat, lng, data => {
-                    centre.weather = data;
-                    renderWeather(data);
-                })
-                getForecast(lat, lng, data => {
-                    centre.forecast = data;
-                    renderMenuWeather(data);
-                })
-            });
+            getCentreData();
         }, 1000);
     })
+
+    const getCentreData = () => {
+        let { lat, lng } = map.getCenter();
+        getCurrentAddress(lat, lng, data => {
+            centre.data = data.results[0];
+            appendAlertAddress(data);
+            populateMenuAddress(data.results[0]);
+            getCountryData(data.results[0].country_code, true, data => {
+                centre.country = data;
+                populateCountryData(data);
+                getExchangeRates(data.currencyCode, data => {
+                    renderExchangeRates(data)
+                })
+            })
+            getWeather(lat, lng, data => {
+                centre.weather = data;
+                renderWeather(data);
+            })
+            getForecast(lat, lng, data => {
+                centre.forecast = data;
+                renderMenuWeather(data);
+            })
+        });
+            
+        const townBounds = L.latLng(lat,lng).toBounds(10000);
+        getWiki(townBounds, data => {
+            renderWikis(data);
+        });
+    }
 
     // Methods to fill the menu
     const populateMenuAddress = data => {
         infoHeaderText.html(data.address_line1);
         formattedAddress.html(`${data.address_line1}${data.city ? `, ${data.city}` : ''}${data.county ? `, ${data.county}` : ''}${!data.postcode ? '' : `, ${data.postcode}`}`);
-        countryState.html(`${data.country}${data.state.includes('-Capital') ? '' : `, <span class="fs-6">${data.state}</span>`}`)
+        countryState.html(`${data.country}${data && data.state && data.state.includes('-Capital') ? '' : `, <span class="fs-6">${data.state}</span>`}`)
     }
 
     const populateCountryData = data => {
@@ -981,10 +1102,51 @@ $(() => {
                 // Change the my location icon to found
                 myLocationFound();
             })
+        }, err => {
+            // If it fails bring up a modal to get the users country
+            handleNoLocation();
         });
     }
 
     goToUserLocation();
+
+    // Method to handle no location
+    const handleNoLocation = () => {
+        const startModal = $(`<div class="location modal fade" tabindex="-1"></div>`);
+        const startModalDialog = $(`<div class="modal-dialog modal-dialog-centered"></div>`);
+        const startModalContent = $(`<div class="modal-content"></div>`);
+        const startModalHeader = $(`<div class="modal-header"></div>`);
+        const startModalTitle = $(`<h5 class="modal-title">Location Services</h5>`);
+        const startModalClose = $(`<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>`);
+        const startModalBody = $(`<div class="modal-body"><p>You didn't enable your location services or they're not available on your device. We aim to tailor your experience based on your location.</p><p class="mb-0">If you want the best experience enable your location and click below. If not, feel free to XPlore!</p></div>`);
+        const startModalFooter = $(`<div class="modal-footer"></div>`);
+        const startCancel = $(`<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>`);
+        const startLocating = $(`<button type="button" class="btn btn-primary"><svg xmlns="http://www.w3.org/2000/svg" height="48" width="48" viewbox="0 0 48 48" fill="currentcolor"><path d="M22.5 46V42.25Q15.65 41.55 11.1 37Q6.55 32.45 5.85 25.6H2.1V22.6H5.85Q6.55 15.75 11.1 11.2Q15.65 6.65 22.5 5.95V2.2H25.5V5.95Q32.35 6.65 36.9 11.2Q41.45 15.75 42.15 22.6H45.9V25.6H42.15Q41.45 32.45 36.9 37Q32.35 41.55 25.5 42.25V46ZM24 39.3Q30.25 39.3 34.725 34.825Q39.2 30.35 39.2 24.1Q39.2 17.85 34.725 13.375Q30.25 8.9 24 8.9Q17.75 8.9 13.275 13.375Q8.8 17.85 8.8 24.1Q8.8 30.35 13.275 34.825Q17.75 39.3 24 39.3Z"/></svg></button>`);
+
+        root.append(startModal);
+        startModal.append(startModalDialog);
+        startModalDialog.append(startModalContent);
+
+        startModalContent.append(startModalHeader);
+        startModalHeader.append(startModalTitle);
+        startModalHeader.append(startModalClose);
+
+        startModalContent.append(startModalBody);
+
+        startModalContent.append(startModalFooter);
+        startModalFooter.append(startCancel);
+        startModalFooter.append(startLocating);
+
+        const startModalControl = new bootstrap.Modal(startModal[0]);
+        startModalControl.show();
+
+        startLocating.on('click', e => {
+            goToUserLocation();
+            startModalControl.hide();
+        })
+    }
+
+    getCentreData();
 
     // Go to location
     const goToLocation = (latLng, latLngBounds) => {

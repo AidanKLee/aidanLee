@@ -27,6 +27,10 @@
     font-weight: 500 !important;
 }
 
+.modal {
+    z-index: 1005;
+}
+
 /* ######################################################### */
 /* Top Layer */
 /* ######################################################### */
@@ -492,6 +496,57 @@ div.select-rates input {
     font-weight: 500;
 }
 
+/* ######################################################### */
+/* Starting Modal /*
+/* ######################################################### */
+
+div.location .modal-body {
+    font-size: .9rem;
+}
+
+div.location .modal-footer svg {
+    height: 24px;
+    width: 24px;
+}
+
+/* ######################################################### */
+/* Wiki Carousel /*
+/* ######################################################### */
+
+div#wiki .card {
+    border-radius: 16px !important;
+}
+
+div#wiki .card small, div#wiki .card h5 {
+    display: block;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+div#wiki .card p:nth-of-type(1) {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: initial;
+    -webkit-line-clamp: 4;
+}
+
+/* ######################################################### */
+/* Attribution /*
+/* ######################################################### */
+
+div#attribution a {
+    flex: 1 1;
+    margin: 0 4px;
+}
+
+div#attribution img {
+    height: auto;
+    max-width: 32px;
+    width: 100%;
+}
 
 @media screen and (max-width: 456px) {
     div#more-info-menu .weather .temp {
