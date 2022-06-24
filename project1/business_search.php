@@ -14,9 +14,8 @@
 
     $executionStartTime = microtime(true);
 
-    $url = "https://api.yelp.com/v3/autocomplete?text=" . urlencode($_REQUEST['q']) . "&latitude=" . $_REQUEST['lat'] . "&longitude=" . $_REQUEST['lng'];
+    $url = "https://api.yelp.com/v3/businesses/search?term=" . urlencode($_REQUEST['q']) . "&latitude=" . $_REQUEST['lat'] . "&longitude=" . $_REQUEST['lng'] . "&categories=" . $_REQUEST['categories'] . "&radius=" . $_REQUEST['radius'] . "&limit=50";
     
-
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);

@@ -22,8 +22,23 @@ import thunderforest from './assets/images/attribution/thunderforest.png';
 
 import currencies from './assets/json/currencies.json';
 import geojson from './assets/geojson/countryBorders.geo.json';
+import cats from './assets/json/mainCategories.json';
+import allCats from './assets/json/categories.json';
+import colours from './assets/json/colours.json';
 
 import './style.css';
+
+const categories = {};
+const allCategories = {};
+
+let colourIndex = 0;
+cats.forEach(cat => {
+    cat.colour = colours[colourIndex];
+    categories[cat.alias] = cat
+    colourIndex = colourIndex === 9 ? 0 : colourIndex + 1;
+});
+
+allCats.categories.forEach(cat => allCategories[cat.alias] = cat);
 
 
 /***************************************************************************************************/
@@ -75,18 +90,18 @@ const attributions = {
 /***************************************************************************************************/
 const tiles = [
     {
-        name: 'terrain',
-        img: terrain,
-        key: process.env.THUNDERFOREST,
-        href: `https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey=`,
-        attribution: '<a href="https://www.thunderforest.com/" data-bs-toggle="tooltip" title="Tiles Courtesy of Thunderforest Maps" target="_blank" class="jawg-attrib">&copy; <b>Thunderforest</b>Maps</a> | <a href="https://www.openstreetmap.org/copyright" data-bs-toggle="tooltip" title="OpenStreetMap is open data licensed under ODbL" target="_blank" class="osm-attrib">&copy; OSM contributors</a>'
-    },
-    {
         name: 'primary',
         img: primary,
         key: process.env.JAWG,
         href: `https://tile.jawg.io/jawg-sunny/{z}/{x}/{y}.png?access-token=`,
         attribution: '<a href="http://jawg.io" data-bs-toggle="tooltip" title="Tiles Courtesy of Jawg Maps" target="_blank" class="jawg-attrib">&copy; <b>Jawg</b>Maps</a> | <a href="https://www.openstreetmap.org/copyright" data-bs-toggle="tooltip" title="OpenStreetMap is open data licensed under ODbL" target="_blank" class="osm-attrib">&copy; OSM contributors</a>'
+    },
+    {
+        name: 'terrain',
+        img: terrain,
+        key: process.env.THUNDERFOREST,
+        href: `https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey=`,
+        attribution: '<a href="https://www.thunderforest.com/" data-bs-toggle="tooltip" title="Tiles Courtesy of Thunderforest Maps" target="_blank" class="jawg-attrib">&copy; <b>Thunderforest</b>Maps</a> | <a href="https://www.openstreetmap.org/copyright" data-bs-toggle="tooltip" title="OpenStreetMap is open data licensed under ODbL" target="_blank" class="osm-attrib">&copy; OSM contributors</a>'
     },
     {
         name: 'dark',
@@ -107,6 +122,8 @@ const tiles = [
 /***************************************************************************************************/
 let map = null;
 let baseLayers = {};
+let markerLayerGroup = null;
+let businessLayerGroup = null;
 let location = null;
 let centre = {};
 let found = false;
@@ -132,7 +149,7 @@ const root = $('#root');
 /***************************************************************************************************/
 const mapContainer = $('<div id="map"></div>');
 
-const crosshair = $('<svg id="crosshair" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-crosshair"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>');
+const crosshair = $('<svg id="crosshair" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather feather-crosshair"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>');
 const loader = $(`<div id="loader" class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>`);
 const topControls = $('<div class="controls top"></div>');
 const bottomLeftControls = $('<div class="controls bottom-left"></div>');
@@ -145,7 +162,7 @@ const zoomIn = $('<button class="btn btn-primary border" type="button" data-bs-t
 const zoomOut = $('<button class="btn btn-light border" type="button" data-bs-toggle="tooltip" title="Zoom Out"></button>');
 
 const moreInfo = $('<button id="more-info" class="btn btn-secondary border round" data-bs-toggle="tooltip" title="More Info"></button>');
-const navigation = $('<button id="navigation" class="btn btn-secondary border round" data-bs-toggle="tooltip" title="Navigation"></button>');
+// const navigation = $('<button id="navigation" class="btn btn-secondary border round" data-bs-toggle="tooltip" title="Navigation"></button>');
 const myLocation = $('<button id="my-location" class="btn btn-secondary border round" data-bs-toggle="tooltip" title="My Location"></button>');
 const outline = $('<button id="geolayer" class="btn btn-light border round active" data-bs-toggle="tooltip" title="My Location"></button>');
 const crosshairButton = $('<button id="crosshair-button" class="btn btn-light border round active" data-bs-toggle="tooltip" title="Crosshair"></button>');
@@ -483,6 +500,10 @@ const renderResults = (res, map) => {
             // On list item click, go to location
             resultElement.on('click', e => {
                 const { lat, lng } = latLng;
+                if (Object.keys(markerLayerGroup._layers).length > 0) {
+                    markerLayerGroup.clearLayers();
+                }
+                addLocationMarker(latLng)
                 getCurrentAddress(lat, lng, data => {
                     renderToast({name: 'XPlore', src: logo, text: `Moved to ${data.results[0].formatted}.`});
                 })
@@ -607,6 +628,18 @@ const renderAlertAddress = data => {
 // Global Functions
 /***************************************************************************************************/
 
+// Get Current Location When Map Stops Moving
+/***************************************************************************************************/
+const handleMapMoveEnd = e => {
+    if (moveTimeout) {
+        clearTimeout(moveTimeout);
+    }
+
+    moveTimeout = setTimeout(() => {
+        getCurrentLocation();
+    }, 1000);
+}
+
 // Change My Location Icon To Found
 /***************************************************************************************************/
 const myLocationFound = () => {
@@ -663,6 +696,13 @@ const toggleGeoLayer =()=> {
     }
 }
 
+// Toggle GeoJSON Layer
+/***************************************************************************************************/
+const toggleCrosshair = e => {
+    crosshairButton.toggleClass('active');
+    crosshair.toggleClass('hide');
+}
+
 // Check If Is Fullscreen
 /***************************************************************************************************/
 const isFullscreen = () => {
@@ -679,11 +719,70 @@ const toggleFullscreen = () => {
     }
 }
 
+// Handle Map Click
+/***************************************************************************************************/
+const handleMapClick = latLng => {
+    if (Object.keys(markerLayerGroup._layers).length > 0) {
+        removeMarkers();
+    } else {
+        addLocationMarker(latLng);
+    }
+}
+
+// Create A Location Marker
+/***************************************************************************************************/
+const addLocationMarker = (latLng, html = `<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"feather feather-info\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"16\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"8\" x2=\"12.01\" y2=\"8\"></line></svg>`) => {
+    const icon = L.divIcon({ className: 'pin1 secondary', iconSize: [48, 48], html });
+    const marker = L.marker(latLng, { icon, interactive: true }).addTo(markerLayerGroup);
+
+    if (Object.keys(markerLayerGroup._layers).length === 1) {
+        map.addEventListener('zoomend', () => {
+            if (moveTimeout) {
+                clearTimeout(moveTimeout);
+            }
+        
+            moveTimeout = setTimeout(() => {
+                getCurrentLocation(latLng);
+            }, 1000);
+        });
+    }
+
+    marker.clickCount = 0;
+
+    getCurrentLocation(latLng);
+    crosshair.fadeOut();
+
+    marker.addEventListener('click', e => {
+        marker.removeFrom(markerLayerGroup);
+        handleRemovedMarker();
+    })
+    
+    map.removeEventListener('moveend', handleMapMoveEnd);
+}
+
+// Clear All Markers
+const removeMarkers = () => {
+    markerLayerGroup.clearLayers();
+    handleRemovedMarker();
+}
+
+// Cleanup For a Removed Marker
+/***************************************************************************************************/
+const handleRemovedMarker = () => {
+    if (Object.keys(markerLayerGroup._layers).length === 0) {
+        getCurrentLocation();
+        crosshair.fadeIn();
+        map.removeEventListener('zoomend', () => getCurrentLocation(latLng));
+        map.addEventListener('moveend', handleMapMoveEnd);
+    }
+}
+
 // Create Marker & Circle For My Location
 /***************************************************************************************************/
-const addMyLocationMarkers = geo => {
+const getMyLocationMarkers = geo => {
     const latLng = L.latLng(geo.coords.latitude, geo.coords.longitude);
-    const marker = L.marker(latLng);
+    const icon = L.divIcon({ className: "pin1", iconSize: [48, 48], html: `<svg xmlns="http://www.w3.org/2000/svg" height="48" width="48" viewBox="0 0 48 48" fill="currentcolor"><path d="M11.1 35.25Q14.25 33.05 17.35 31.875Q20.45 30.7 24 30.7Q27.55 30.7 30.675 31.875Q33.8 33.05 36.95 35.25Q39.15 32.55 40.075 29.8Q41 27.05 41 24Q41 16.75 36.125 11.875Q31.25 7 24 7Q16.75 7 11.875 11.875Q7 16.75 7 24Q7 27.05 7.95 29.8Q8.9 32.55 11.1 35.25ZM24 25.5Q21.1 25.5 19.125 23.525Q17.15 21.55 17.15 18.65Q17.15 15.75 19.125 13.775Q21.1 11.8 24 11.8Q26.9 11.8 28.875 13.775Q30.85 15.75 30.85 18.65Q30.85 21.55 28.875 23.525Q26.9 25.5 24 25.5ZM24 44Q19.9 44 16.25 42.425Q12.6 40.85 9.875 38.125Q7.15 35.4 5.575 31.75Q4 28.1 4 24Q4 19.85 5.575 16.225Q7.15 12.6 9.875 9.875Q12.6 7.15 16.25 5.575Q19.9 4 24 4Q28.15 4 31.775 5.575Q35.4 7.15 38.125 9.875Q40.85 12.6 42.425 16.225Q44 19.85 44 24Q44 28.1 42.425 31.75Q40.85 35.4 38.125 38.125Q35.4 40.85 31.775 42.425Q28.15 44 24 44ZM24 41Q26.75 41 29.375 40.2Q32 39.4 34.55 37.4Q32 35.6 29.35 34.65Q26.7 33.7 24 33.7Q21.3 33.7 18.65 34.65Q16 35.6 13.45 37.4Q16 39.4 18.625 40.2Q21.25 41 24 41ZM24 22.5Q25.7 22.5 26.775 21.425Q27.85 20.35 27.85 18.65Q27.85 16.95 26.775 15.875Q25.7 14.8 24 14.8Q22.3 14.8 21.225 15.875Q20.15 16.95 20.15 18.65Q20.15 20.35 21.225 21.425Q22.3 22.5 24 22.5ZM24 18.65Q24 18.65 24 18.65Q24 18.65 24 18.65Q24 18.65 24 18.65Q24 18.65 24 18.65Q24 18.65 24 18.65Q24 18.65 24 18.65Q24 18.65 24 18.65Q24 18.65 24 18.65ZM24 37.35Q24 37.35 24 37.35Q24 37.35 24 37.35Q24 37.35 24 37.35Q24 37.35 24 37.35Q24 37.35 24 37.35Q24 37.35 24 37.35Q24 37.35 24 37.35Q24 37.35 24 37.35Z"/></svg>` });
+    const marker = L.marker(latLng, { icon });
     const circle = L.circle(latLng, { 
         radius: geo.coords.accuracy,
         color: '#0d6efd',
@@ -698,7 +797,7 @@ const addMyLocationMarkers = geo => {
 const goToMyLocation =()=> {
     const geolocation = navigator.geolocation;
     geolocation.getCurrentPosition(res => {
-        location = addMyLocationMarkers(res);
+        location = getMyLocationMarkers(res);
         getCurrentAddress(res.coords.latitude, res.coords.longitude, data => {
             location = {
                 ...location,
@@ -716,7 +815,7 @@ const goToMyLocation =()=> {
         map.flyToBounds(location.latLngBounds);
 
         const handleZoomEnd = () => {
-            if (!found) {
+            if (location && !found) {
                 // If the location has not already been found 
                 // while the app has been open add a circle, add a marker, create a found location toast
                 const { latitude: lat, longitude: lng } = res.coords;
@@ -749,8 +848,8 @@ const goToMyLocation =()=> {
 /***************************************************************************************************/
 const goToLocation = (latLng, latLngBounds) => {
     // Add marker
-    const marker = L.marker(latLng);
-    marker.addTo(map);
+    // const marker = L.marker(latLng);
+    // marker.addTo(map);
 
     // Go to location
     map.flyToBounds(latLngBounds);
@@ -802,7 +901,6 @@ const pajax = ({ url, type, dataType, data }) => {
     if (AJAXQueue.length === 0) {
         loader.fadeIn();
     }
-    root.append(loader);
     return new Promise((resolved) => {
         const request = $.ajax({
             url, type, dataType, data,
@@ -841,7 +939,7 @@ const getCurrentAddress = async (lat, lng, cb) => {
         url: process.env.BACKEND_HOST + '/reverse_geocoding.php',
         type: 'GET', dataType: 'json', data: { lat, lng }
     })
-    cb(res.data);
+    if (cb) { cb(res.data) };
     return res.data;
 }
 
@@ -855,7 +953,7 @@ const getCountryData = async (country, isCentre, cb) => {
                 url: `${process.env.BACKEND_HOST}/country_info.php`,
                 type: 'POST', dataType: 'json', data: { country }
             });
-            cb(res.data[0]);
+            if (cb) { cb(res.data[0]) };
             return res.data[0];
         }
     }
@@ -871,7 +969,7 @@ const getExchangeRates = async (currency, cb) => {
             type: 'GET', dataType: 'json'
         })
         res = convertExchangeRates(currency, res);
-        cb({base: res.data.base, rates: res.data.rates, currency});
+        if (cb) { cb({base: res.data.base, rates: res.data.rates, currency}) };
         return {base: res.data.base, rates: res.data.rates, currency};
     }
 }
@@ -883,7 +981,7 @@ const getWeather = async (lat, lng, cb) => {
         url: process.env.BACKEND_HOST + '/weather.php',
         type: 'GET', dataType: 'json', data: { lat, lng }
     })
-    cb({ ...res.data.weather[0], ...res.data.main });
+    if (cb) { cb({ ...res.data.weather[0], ...res.data.main }) };
     return { ...res.data.weather[0], ...res.data.main };
 }
 
@@ -895,7 +993,7 @@ const getForecast = async (lat, lng, cb) => {
         type: 'GET', dataType: 'json', data: { lat, lng }
     })
     res = extractForecastData(res);
-    cb(res);
+    if (cb) { cb(res) };
     return res;
 }
 
@@ -910,7 +1008,7 @@ const getWiki = async (latLngBounds, cb) => {
         url: process.env.BACKEND_HOST + '/wikipedia.php',
         type: 'GET', dataType: 'json', data: { n, e, s, w }
     })
-    cb(res.data);
+    if (cb) { cb(res.data) }
     return res.data;
 }   
 
@@ -927,20 +1025,61 @@ const autocompleteAddresses = data => {
     })
 }
 
-// const autoCompleteBusinesses = data => {
-//     let { lat, lng } = map.getCenter();
-//     if (location) {
-//         ({ lat, lng } = location.latLng);
-//     }
+// Get Businesses
+/***************************************************************************************************/
+const getBusinesses = async (latLng, { categories = '', q = '' } = {}, cb) => {
+    const { lat, lng } = latLng;
+    const northEast = map.getBounds().getNorthEast();
+    let radius = Math.round(northEast.distanceTo(latLng));
+    radius = radius > 40000 && radius < 50000 ? 40000 : radius
+    const res = radius <= 40000 ? await pajax({
+        url: process.env.BACKEND_HOST + '/business_search.php',
+        type: 'GET',
+        dataType: 'json',
+        data: { categories, lat, lng, q, radius },
+    }) : {data: { businesses: [] }};
+    res.data.businesses = res.data.businesses ? res.data.businesses.map(business => addIconsToBusiness(business)) : [];
 
-//     data = { ...data, lat, lng };
-//     return $.ajax({
-//         url: process.env.BACKEND_HOST + '/business_autocomplete.php',
-//         type: 'GET',
-//         dataType: 'json',
-//         data,
-//     })
-// }
+    if (cb) { cb(res.data) };
+    return res.data;
+}
+
+const addIconsToBusiness = business => {
+    const icons = [];
+    business.categories.forEach(category => {
+        let { alias } = category;
+        const getIcon = alias => {
+            if (alias in categories) {
+                icons.push({img: categories[alias].icon, colour: categories[alias].colour});
+            } else {
+                alias = allCategories[alias].parent_aliases[0];
+                getIcon(alias);
+            }
+        }
+        getIcon(alias);
+    })
+    return { ...business, icons: [ ...new Set(icons) ] };
+}
+
+const addBusinessMarkers = data => {
+    if (businessLayerGroup) {
+        businessLayerGroup.clearLayers();
+    } else {
+        businessLayerGroup = L.layerGroup().addTo(map);
+    }
+
+    const businessIcons = data.businesses.map(business => {
+        let rating = '';
+        const stars = new Array(Math.ceil(business.rating)).fill(`<svg class="star" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-star"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`);
+        stars.forEach(star => {
+            rating += star;
+        })
+        const latLng = L.latLng(business.coordinates.latitude, business.coordinates.longitude);
+        const icon = L.divIcon({ className: `business ${business.icons[0].colour}`, iconSize: [48, 48], html: business.icons[0].img + `<div class="business-data card"><img src="${business.image_url}" alt=""/><div class="card-body"><p class="fs-6 fw-semibold mb-0 lh-1">${business.name}</p><div class="rating mb-1" style="width: ${business.rating * 16}px;">${rating}</div><p class="card-subtitle text-muted fw-semibold mb-0">${business.location.address1}</p><p class="card-text mb-0">${business.location.city}</p><p class="card-text mb-0">${business.location.zip_code}</p></div></div>`});
+        const marker = L.marker(latLng, { icon, interactive: true }).addTo(businessLayerGroup);
+    })
+
+}
 
 // Callback HELLLLLLLLLLLLL
 // const getCurrentLocation = () => {
@@ -984,14 +1123,14 @@ const autocompleteAddresses = data => {
 //     });
 // }
 
-const getCurrentLocation = () => {
+const getCurrentLocation = (latLng) => {
     AJAXQueue.forEach(request => {
         request.abort();
     })
-    // AJAXQueue = [];
-    let { lat, lng } = map.getCenter();
 
-    
+    latLng = latLng ? latLng : map.getCenter();
+
+    const { lat, lng } = latLng;
 
     getCurrentAddress(lat, lng, data => {
         centre.data = data.results[0];
@@ -1007,21 +1146,25 @@ const getCurrentLocation = () => {
             centre.country = data;
             renderCountryData(data);
             getExchangeRates(data.currencyCode, data => {
+                centre.exchangeRates = data;
                 renderExchangeRates(data)
             })
         })
-        getWeather(lat, lng, data => {
-            centre.weather = data;
-            renderWeather(data);
-        })
-        getForecast(lat, lng, data => {
-            centre.forecast = data;
-            renderMenuWeather(data);
-        })
     });
-        
-    const screenBounds = map.getBounds();
-    getWiki(screenBounds, data => {
+
+    getBusinesses(latLng, {}, data => {
+        addBusinessMarkers(data)
+    });
+    getWeather(lat, lng, data => {
+        centre.weather = data;
+        renderWeather(data);
+    })
+    getForecast(lat, lng, data => {
+        centre.forecast = data;
+        renderMenuWeather(data);
+    })
+    const bounds = map.getBounds();
+    getWiki(bounds, data => {
         renderWikis(data);
     });
 }
@@ -1066,22 +1209,22 @@ const renderMainElements = () => {
         zoomControl: false
     })
 
+    // Map # Create and add a marker to the map
+    map.addEventListener('click', e => {
+        handleMapClick(e.latlng)
+    })
+
     // Map # Show The My Location Left Icon
     map.addEventListener('move', e => {
-        loader.fadeIn();
         myLocationLeft();
     })
     
     // Map # Get Current/Selected Location Data After Moving (If it has moved more than once within a second, cancel the initial call)
-    map.addEventListener('moveend', e => {
-        if (moveTimeout) {
-            clearTimeout(moveTimeout);
-        }
+    map.addEventListener('moveend', handleMapMoveEnd);
 
-        moveTimeout = setTimeout(() => {
-            getCurrentLocation();
-        }, 1000);
-    })
+    // Add a Layer Group To The Map For Markers
+    /***************************************************************************************************/
+    markerLayerGroup = L.layerGroup().addTo(map);
 
     // Add Initial Base Layer To The Map and Prep Controls
     /***************************************************************************************************/
@@ -1099,12 +1242,12 @@ const renderMainElements = () => {
 
     // Navigation Button
     /***************************************************************************************************/
-    navigation.html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-navigation"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>');
-    bottomRightControls.prepend(navigation);
+    // navigation.html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-navigation"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>');
+    // bottomRightControls.prepend(navigation);
 
     // My Location Button
     /***************************************************************************************************/
-    myLocation.html('<svg xmlns="http://www.w3.org/2000/svg" height="48" width="48" viewbox="0 0 48 48"><path d="M22.5 46V42.25Q15.65 41.55 11.1 37Q6.55 32.45 5.85 25.6H2.1V22.6H5.85Q6.55 15.75 11.1 11.2Q15.65 6.65 22.5 5.95V2.2H25.5V5.95Q32.35 6.65 36.9 11.2Q41.45 15.75 42.15 22.6H45.9V25.6H42.15Q41.45 32.45 36.9 37Q32.35 41.55 25.5 42.25V46ZM24 39.3Q30.25 39.3 34.725 34.825Q39.2 30.35 39.2 24.1Q39.2 17.85 34.725 13.375Q30.25 8.9 24 8.9Q17.75 8.9 13.275 13.375Q8.8 17.85 8.8 24.1Q8.8 30.35 13.275 34.825Q17.75 39.3 24 39.3Z"/></svg>');
+    myLocation.html('<svg xmlns="http://www.w3.org/2000/svg" height="48" width="48" viewbox="0 0 48 48" fill="currentcolor><path d="M22.5 46V42.25Q15.65 41.55 11.1 37Q6.55 32.45 5.85 25.6H2.1V22.6H5.85Q6.55 15.75 11.1 11.2Q15.65 6.65 22.5 5.95V2.2H25.5V5.95Q32.35 6.65 36.9 11.2Q41.45 15.75 42.15 22.6H45.9V25.6H42.15Q41.45 32.45 36.9 37Q32.35 41.55 25.5 42.25V46ZM24 39.3Q30.25 39.3 34.725 34.825Q39.2 30.35 39.2 24.1Q39.2 17.85 34.725 13.375Q30.25 8.9 24 8.9Q17.75 8.9 13.275 13.375Q8.8 17.85 8.8 24.1Q8.8 30.35 13.275 34.825Q17.75 39.3 24 39.3Z"/></svg>');
     bottomRightControls.prepend(myLocation);
 
     // More Info Menu
@@ -1251,7 +1394,7 @@ infoClose.on('click', e => {
 // My Location Button # Go To Current Location
 /***************************************************************************************************/
 myLocation.on('click', e => {
-    if (!found || !location) {
+    if (!location) {
         renderNoLocation()
     } else {
         goToMyLocation(map);
@@ -1267,10 +1410,7 @@ outline.on('click', e => {
 
 // Crosshair Button # Toggle The Crosshair
 /***************************************************************************************************/
-crosshairButton.on('click', e => {
-    crosshairButton.toggleClass('active');
-    crosshair.toggleClass('hide');
-})
+crosshairButton.on('click', toggleCrosshair);
 
 // Searchbar # Show & Hide Search Results on Focus and Blur
 /***************************************************************************************************/
@@ -1320,6 +1460,9 @@ countrySelect.on('change', e => {
         const { north, east, south, west } = data;
         const corner1 = L.latLng(north, east);
         const corner2 = L.latLng(south, west);
+
+        removeMarkers();
+
         map.flyToBounds(L.latLngBounds(corner1, corner2));
         if (outline.hasClass('active')) {
             showGeoLayer(e.target.value);
