@@ -1,4 +1,6 @@
 @import './fonts.css';
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
 /* ######################################################### */
 /* Global */
 /* ######################################################### */
@@ -32,6 +34,69 @@
 }
 
 /* ######################################################### */
+/* Preloader */
+/* ######################################################### */
+
+div#preloader {
+    background-color: var(--bs-light);
+    z-index: 1010;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 1s;
+}
+
+div#preloader.hide {
+    opacity: 0;
+    pointer-events: none;
+}
+
+div#preloader div {
+    height: 33%;
+    width: 100%;
+    max-width: 24px;
+    background-color: var(--bs-primary);
+    margin: 4px;
+    transform: scaleY(0);
+    border-radius: 4px;
+}
+
+div#preloader div:nth-of-type(1) {
+    animation: preloader .5s ease-out 0s infinite forwards;
+}
+
+div#preloader div:nth-of-type(2) {
+    animation: preloader .5s ease-out .1s infinite forwards;
+}
+
+div#preloader div:nth-of-type(3) {
+    animation: preloader .5s ease-out .2s infinite forwards;
+}
+
+div#preloader div:nth-of-type(4) {
+    animation: preloader .5s ease-out .3s infinite forwards;
+}
+
+div#preloader div:nth-of-type(5) {
+    animation: preloader .5s ease-out .4s infinite forwards;
+}
+
+@keyframes preloader {
+    0% {
+        transform: scaleY(0);
+    } 50% {
+        transform: scaleY(1);
+    } 100% {
+        transform: scaleY(0);
+    }
+}
+
+/* ######################################################### */
 /* Top Layer */
 /* ######################################################### */
 div#root {
@@ -45,6 +110,38 @@ div#map {
 
 div.leaflet-control-attribution {
     display: none;
+}
+
+svg#crosshair {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    height: 32px;
+    width: 32px;
+    z-index: 1000;
+    transition: opacity.3s;
+    pointer-events: none;
+}
+
+svg#crosshair.light {
+    color: yellow !important;
+}
+
+svg#crosshair.hide {
+    opacity: 0;
+}
+
+div#loader {
+    position: absolute;
+    height: 56px;
+    width: 56px;
+    top: calc(50% - 28px);
+    left: calc(50% - 28px);
+    z-index: 1004;
+    border: 8px solid rgba(128, 128, 128, 0.6);
+    border-bottom: 0 none transparent;
+    pointer-events: none;
 }
 
 div.controls {
@@ -116,14 +213,6 @@ div.controls.top.show {
 
 div.controls.top > .left {
     width: 100%;
-    max-width: 440px;
-}
-
-/* ######################################################### */
-/* Custom Tooltips /*
-/* ######################################################### */
-.tooltip {
-    --bs-tooltip-bg: var(--bs-gray-200);
 }
 
 /* ######################################################### */
@@ -197,11 +286,17 @@ button.round {
     border-radius: 50%;
 }
 
+button.active {
+    outline: 2px solid var(--bs-primary) !important;
+    color: var(--bs-primary) !important;
+}
+
 /* ######################################################### */
 /* Search Bar /*
 /* ######################################################### */
 
 input#q {
+    flex: 2;
     max-width: 100%;
     transition: .5s;
 }
@@ -214,6 +309,15 @@ input#q.show {
 input#q:focus {
     max-width: 100%;
     padding: 6px 12px;
+}
+
+select#country {
+    flex: 1;
+    font-size: .8rem;
+    width: fit-content;
+    max-width: 100%;
+    overflow: hidden;
+    transition: .5s;
 }
 
 div#search-bar {
@@ -230,11 +334,22 @@ div#search-results button {
     font-size: .7rem;
 }
 
-@media screen and (max-width: 456px) {
+button.list-group-item.active {
+    color: #fff !important;
+}
 
+@media screen and (max-width: 440px) {
     input#q {
         max-width: 0;
         padding: 6px 0;
+    }
+
+    select#country.hide {
+        max-width: 0;
+        padding-left: 0;
+        padding-right: 0;
+        border-left: 0;
+        border-right: 0;
     }
 }
 
@@ -244,7 +359,7 @@ div#search-results button {
 
 .toast-container {
     width: 100% !important;
-    max-width: none !important;
+    max-width: 440px !important;
 }
 
 .toast-container img {

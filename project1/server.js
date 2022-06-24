@@ -8,13 +8,13 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 const liveReload = livereload.createServer();
-liveReload.watch(__dirname + "dist");
+// liveReload.watch(__dirname + "dist");
 
-liveReload.server.once("connection", () => {
-    setTimeout(() => {
-        liveReload.refresh("/");
-    }, 100);
-});
+// liveReload.server.once("connection", () => {
+//     setTimeout(() => {
+//         liveReload.refresh("/");
+//     }, 100);
+// });
 
 app.use(connectLivereload());
 
