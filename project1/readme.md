@@ -49,7 +49,7 @@ These are instructions to download and view the app on your own workstation (ens
 2. In the console navigate to the root project folder `project1`.
 3. Run `npm install` for node/js dependencies.
 4. Run `composer install` for composer/php dependencies.
-5. Run `npm start` to create a development build in the `dist` folder and start the local development server on http://localhost:3000.
+5. Run `npm start` to create a development build in the `dist` folder and start the local development server on `http://localhost:3000`.
 6. Run `php -S localhost:3001` to start the php server.
 7. Go to a browser and see the app in action.
 
@@ -71,9 +71,10 @@ These are instructions to download and view the app on your own workstation (ens
 NOTE: You can choose whether to host the app on one single domain for the frontend and backend or separate domains but be sure to change the `BACKEND_HOST` variable in the `.env` file.
 
 ### Root Folder Files & Directories
-- `dist` contains the current build of the app.
+- `dist` is created on the first build and contains the current build of the app whether that be development or production.
 - `src` contains the original source code and assets for the app.
 - `.env` contains the development environment variables.
+- `prod.env` contains the default production envirinment variables.
 - `example.env` contains a template for the environment variables. This file is referenced by webpack when creating builds to ensure no variables are missing.
 - Files ending in `.php` contain backend script for fetching from external API's.
 - `composer.json` contains the PHP dependencies to be installed by running `composer install`.
