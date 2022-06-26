@@ -608,6 +608,60 @@ div#more-info-menu .weather .right .bottom p {
     margin-right: 8px;
 }
 
+div#more-info-menu #business-info {
+    background-color: var(--bs-light);
+    border-radius: 16px;
+}
+
+div#more-info-menu #business-info img {
+    max-height: 232px;
+    object-fit: cover;
+    object-position: center;
+}
+
+div#more-info-menu #business-info h2 {
+    position: relative;
+    z-index: 5;
+}
+
+div#more-info-menu #business-info .card-icons {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    margin: 8px;
+    z-index: 2;
+}
+
+div#more-info-menu #business-info .card-icons > div {
+    border-radius: 50%;
+    margin-left: 8px;
+    height: 48px;
+    width: 48px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+div#more-info-menu #business-info .card-icons > div > svg {
+    border-radius: 50%;
+    fill: white;
+    height: 60%;
+    width: 60%;
+}
+
+div#more-info-menu #business-info .rating {
+    overflow: hidden !important;
+    white-space: nowrap;
+}
+
+div#more-info-menu #business-info .rating > svg {
+    fill: #FFD700;
+    stroke: transparent;
+    height: 16px !important;
+    width: 16px !important;
+}
+
 /* ######################################################### */
 /* Exchange Rates /*
 /* ######################################################### */
@@ -639,8 +693,21 @@ div.location .modal-footer svg {
 /* Wiki Carousel /*
 /* ######################################################### */
 
-div#wiki .card {
+div#wiki,
+div#news {
+    margin-bottom: -16px;
+}
+
+div#wiki .card,
+div#news .card {
     border-radius: 16px !important;
+}
+
+div#news .card img {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
 }
 
 div#wiki .card small, div#wiki .card h5 {
@@ -650,13 +717,36 @@ div#wiki .card small, div#wiki .card h5 {
     white-space: nowrap;
 }
 
-div#wiki .card p:nth-of-type(1) {
+div#wiki .card p:nth-of-type(1),
+div#news .card p:nth-of-type(1),
+div#news .card small, div#news .card h5, div#news .card blockquote {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: initial;
+}
+
+div#news .card small, div#news .card h5 {
+    -webkit-line-clamp: 2;
+}
+
+div#news .card small {
+    font-size: .8rem;
+}
+
+div#news .card blockquote {
+    font-size: .9rem;
+    font-style: italic;
+    -webkit-line-clamp: 2;
+}
+
+div#wiki .card p:nth-of-type(1) {
     -webkit-line-clamp: 4;
+}
+
+div#news .card p:nth-of-type(1) {
+    -webkit-line-clamp: 5;
 }
 
 /* ######################################################### */
@@ -678,8 +768,13 @@ div#attribution img {
 /* Map Icons /*
 /* ######################################################### */
 
+.leaflet-marker-icon.leaflet-interactive {
+    background-color: transparent !important;
+}
+
 .leaflet-marker-icon.leaflet-interactive.pin1 {
     z-index: 900 !important;
+    fill: currentColor;
 }
 
 .leaflet-marker-icon.leaflet-interactive::after {
@@ -700,6 +795,12 @@ div#attribution img {
 
 .secondary::after {
     background-color: var(--bs-secondary) !important;
+}
+
+.secondary svg {
+    height: 60% !important;
+    width: 60% !important;
+    /* transform: scale(1) translate(calc(-50% - 10px), calc(-50% - 44px)) !important; */
 }
 
 .leaflet-marker-icon.leaflet-interactive svg {
@@ -734,11 +835,13 @@ div#attribution img {
     z-index: 1000 !important;
 }
 
-.leaflet-marker-icon.leaflet-interactive.business:hover::after {
+.leaflet-marker-icon.leaflet-interactive.business:hover::after,
+.leaflet-marker-icon.leaflet-interactive.business.active::after {
     transform: scale(1) rotate(-45deg) !important;
 }
 
-.leaflet-marker-icon.leaflet-interactive.business:hover svg {
+.leaflet-marker-icon.leaflet-interactive.business:hover svg,
+.leaflet-marker-icon.leaflet-interactive.business.active svg {
     transform: scale(1) translate(-50%, calc(-50% - 31px));
 }
   
@@ -784,6 +887,76 @@ div#attribution img {
     left: 0 !important;
 }
 
+div#categories {
+    position: absolute;
+    top: 13px;
+    left: 448px;
+    display: flex;
+    max-width: calc(100% - 448px);
+    overflow-x: scroll;
+    padding-left: 8px;
+    z-index: 900;
+}
+
+@media only screen and (max-width: 720px) {
+    div#categories {
+        top: 56px;
+        left: 0;
+        max-width: 100%;
+    }
+}
+
+
+div#categories::-webkit-scrollbar {
+    display: none;
+}
+
+div#categories .btn {
+    color: white;
+    font-size: .8rem;
+    width: fit-content;
+    white-space: nowrap;
+    margin-right: 8px;
+    opacity: .4;
+    transition: .2s;
+}
+
+div#categories .btn:hover {
+    box-shadow: inset -4px -4px 4px rgba(0, 0, 0, 0.1), inset 4px 4px 4px rgba(255, 255, 255, 0.2);
+    opacity: 1;
+}
+
+div#categories .btn:active {
+    box-shadow: inset -0 -0 0 transparent, inset 4px 4px 4px rgba(0, 0, 0, 0.1);
+    outline: 0 none transparent;
+    opacity: 1;
+}
+
+div#categories .btn:focus {
+    outline: 0 none transparent !important;
+}
+
+div#categories .btn-check:focus+.btn, .btn:focus {
+    box-shadow: none;
+}
+
+div#categories .btn.active {
+    outline: 0 none transparent !important;
+    color: white !important;
+    opacity: 1;
+}
+
+div#categories .btn input {
+    display: none;
+}
+
+div#categories .btn svg {
+    height: .8rem;
+    width: .8rem;
+    fill: currentColor;
+    margin-right: 8px;
+}
+
 .indigo::after {
     background-color: var(--bs-indigo) !important;
 }
@@ -822,6 +995,46 @@ div#attribution img {
 
 .grey::after {
     background-color: var(--bs-gray) !important;
+}
+
+.indigo {
+    background-color: var(--bs-indigo);
+}
+
+.purple {
+    background-color: var(--bs-purple);
+}
+
+.pink {
+    background-color: var(--bs-pink);
+}
+
+.red {
+    background-color: var(--bs-red);
+}
+
+.orange {
+    background-color: var(--bs-orange);
+}
+
+.yellow {
+    background-color: var(--bs-yellow);
+}
+
+.green {
+    background-color: var(--bs-green);
+}
+
+.teal {
+    background-color: var(--bs-teal);
+}
+
+.cyan {
+    background-color: var(--bs-cyan);
+}
+
+.grey {
+    background-color: var(--bs-gray);
 }
 
 @media screen and (max-width: 456px) {

@@ -14,6 +14,7 @@ import bs from './assets/images/attribution/bootstrap.png';
 import esri from './assets/images/attribution/esriworldimages.png';
 import geoapify from './assets/images/attribution/geoapify.png';
 import geonames from './assets/images/attribution/geonames.png';
+import gnews from './assets/images/attribution/gnews.png';
 import jawg from './assets/images/attribution/jawgmaps.png';
 import leafletjs from './assets/images/attribution/leafletjs.png';
 import openexchange from './assets/images/attribution/openexchangerates.png';
@@ -25,6 +26,8 @@ import geojson from './assets/geojson/countryBorders.geo.json';
 import cats from './assets/json/mainCategories.json';
 import allCats from './assets/json/categories.json';
 import colours from './assets/json/colours.json';
+
+import news from './assets/json/newsTest.json'
 
 import './style.css';
 
@@ -63,6 +66,10 @@ const attributions = {
     geonames: {
         img: geonames,
         href: 'https://www.geonames.org'
+    },
+    gnews: {
+        img: gnews,
+        href: 'https://gnews.io'
     },
     jawg: {
         img: jawg,
@@ -219,7 +226,7 @@ const infoHeaderText = $(`<h1 class="fs-2 fw-semibold mb-0"></div>`);
 const infoClose = $('<button type="button" class="btn-close" aria-label="Close"></button>');
 
 const infoBody = $('<div class="modal-body"></div>');
-const addressList = $(`<h2 class="modal-title mb-0 fs-6">Address</h2>`);
+const addressList = $(`<h2 class="modal-title mb-0 fs-5">Address</h2>`);
 const formattedAddress = $(`<p></p>`); 
 const countryState = $(`<h2 class="modal-title mb-0 fs-4"></h2>`);
 const continent = $(`<p class="mb-0"></p>`);
@@ -227,6 +234,7 @@ const capital = $(`<p class="mb-0"></p>`);
 const population = $(`<p class="mb-0"></p>`);
 const areaSqKm = $(`<p></p>`);
 const menuWeather = $(`<div class="weather d-flex border mb-3"></div>`);
+const newsArticles = $(`<div class="news"></div>`)
 const currencyList = $(`<div class="currency mb-3"></div>`);
 const wikis = $(`<div class="wiki"></div>`);
 
@@ -377,7 +385,7 @@ const renderWikis = async (entries = []) => {
     const next = $(`<button class="carousel-control-next" type="button" data-bs-target="#wiki" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="false"></span><span class="visually-hidden">Next</span></button>`);
 
     wikis.append(carousel);
-    [indicators, inner, prev, next].forEach(part => carousel.append(part));
+    carousel.append(indicators, inner, prev, next);
 
     if (entries.length > 0) {
         entries.forEach((entry,i) => {
@@ -723,6 +731,9 @@ const toggleFullscreen = () => {
 /***************************************************************************************************/
 const handleMapClick = latLng => {
     if (Object.keys(markerLayerGroup._layers).length > 0) {
+        if ($('#business-info')[0]) {
+            $('#business-info').remove();
+        }
         removeMarkers();
     } else {
         addLocationMarker(latLng);
@@ -731,9 +742,13 @@ const handleMapClick = latLng => {
 
 // Create A Location Marker
 /***************************************************************************************************/
-const addLocationMarker = (latLng, html = `<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"feather feather-info\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"16\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"8\" x2=\"12.01\" y2=\"8\"></line></svg>`) => {
+const addLocationMarker = (latLng, html = `<svg xmlns="http://www.w3.org/2000/svg" height="48" width="48" viewbox="0 0 48 48" fill="currentcolor"><path d="M22.65 34h3V22h-3ZM24 18.3q.7 0 1.175-.45.475-.45.475-1.15t-.475-1.2Q24.7 15 24 15q-.7 0-1.175.5-.475.5-.475 1.2t.475 1.15q.475.45 1.175.45ZM24 44q-4.1 0-7.75-1.575-3.65-1.575-6.375-4.3-2.725-2.725-4.3-6.375Q4 28.1 4 23.95q0-4.1 1.575-7.75 1.575-3.65 4.3-6.35 2.725-2.7 6.375-4.275Q19.9 4 24.05 4q4.1 0 7.75 1.575 3.65 1.575 6.35 4.275 2.7 2.7 4.275 6.35Q44 19.85 44 24q0 4.1-1.575 7.75-1.575 3.65-4.275 6.375t-6.35 4.3Q28.15 44 24 44Zm.05-3q7.05 0 12-4.975T41 23.95q0-7.05-4.95-12T24 7q-7.05 0-12.025 4.95Q7 16.9 7 24q0 7.05 4.975 12.025Q16.95 41 24.05 41ZM24 24Z"/></svg>`) => {
     const icon = L.divIcon({ className: 'pin1 secondary', iconSize: [48, 48], html });
     const marker = L.marker(latLng, { icon, interactive: true }).addTo(markerLayerGroup);
+
+    if ($('#business-info')[0]) {
+        $('#business-info').remove();
+    }
 
     if (Object.keys(markerLayerGroup._layers).length === 1) {
         map.addEventListener('zoomend', () => {
@@ -753,6 +768,9 @@ const addLocationMarker = (latLng, html = `<svg xmlns=\"http://www.w3.org/2000/s
     crosshair.fadeOut();
 
     marker.addEventListener('click', e => {
+        if ($('#business-info')[0]) {
+            $('#business-info').remove();
+        }
         marker.removeFrom(markerLayerGroup);
         handleRemovedMarker();
     })
@@ -985,6 +1003,17 @@ const getWeather = async (lat, lng, cb) => {
     return { ...res.data.weather[0], ...res.data.main };
 }
 
+// Get News
+/***************************************************************************************************/
+const getNews = async (country, cb) => {
+    const res = await pajax({
+        url: process.env.BACKEND_HOST + '/news.php',
+        type: 'GET', dataType: 'json', data: { country }
+    })
+    if (cb) { cb(res.data) };
+    return res;
+}
+
 // Get Forecast Data
 /***************************************************************************************************/
 const getForecast = async (lat, lng, cb) => {
@@ -1050,7 +1079,9 @@ const addIconsToBusiness = business => {
         let { alias } = category;
         const getIcon = alias => {
             if (alias in categories) {
-                icons.push({img: categories[alias].icon, colour: categories[alias].colour});
+                if (!icons.includes(alias)) {
+                    icons.push(alias);
+                }
             } else {
                 alias = allCategories[alias].parent_aliases[0];
                 getIcon(alias);
@@ -1058,7 +1089,7 @@ const addIconsToBusiness = business => {
         }
         getIcon(alias);
     })
-    return { ...business, icons: [ ...new Set(icons) ] };
+    return { ...business, icons: icons.map(alias => { return {img: categories[alias].icon, colour: categories[alias].colour} }) };
 }
 
 const addBusinessMarkers = data => {
@@ -1068,18 +1099,107 @@ const addBusinessMarkers = data => {
         businessLayerGroup = L.layerGroup().addTo(map);
     }
 
-    const businessIcons = data.businesses.map(business => {
+    data.businesses.forEach(business => {
         let rating = '';
         const stars = new Array(Math.ceil(business.rating)).fill(`<svg class="star" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-star"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`);
         stars.forEach(star => {
             rating += star;
         })
         const latLng = L.latLng(business.coordinates.latitude, business.coordinates.longitude);
-        const icon = L.divIcon({ className: `business ${business.icons[0].colour}`, iconSize: [48, 48], html: business.icons[0].img + `<div class="business-data card"><img src="${business.image_url}" alt=""/><div class="card-body"><p class="fs-6 fw-semibold mb-0 lh-1">${business.name}</p><div class="rating mb-1" style="width: ${business.rating * 16}px;">${rating}</div><p class="card-subtitle text-muted fw-semibold mb-0">${business.location.address1}</p><p class="card-text mb-0">${business.location.city}</p><p class="card-text mb-0">${business.location.zip_code}</p></div></div>`});
+        const icon = L.divIcon({ className: `business ${business.icons[0].colour}`, iconSize: [48, 48], html: business.icons[0].img + `<div class="business-data card"><img src="${business.image_url}" alt=""/><div class="card-body"><p class="fs-6 fw-semibold mb-1 lh-1">${business.name}</p><div class="rating mb-1" style="width: ${business.rating * 16}px;">${rating}</div>${business.location.display_address.length > 0 ? [...new Set(business.location.display_address.map(line => `<p class="mb-0">${line}</p>`))].join('') : null}</div></div>`});
         const marker = L.marker(latLng, { icon, interactive: true }).addTo(businessLayerGroup);
-    })
 
+        marker.addEventListener('click', e => {
+            if (Object.keys(markerLayerGroup._layers).length > 0) {
+                markerLayerGroup.clearLayers();
+            }
+            addLocationMarker(latLng, business.icons[0].img);
+            if (!moreInfo.hasClass('active')) {
+                toggleMenu();
+            }
+            const showBusinessInfo = (business) => {
+                const businessInfoContainer = $(`<div id="business-info" class="card mb-3"></div>`);
+                const icons = $(`<div class="card-icons">${business.icons.map(icon => `<div class="${icon.colour} border">${icon.img}</div>`).join('')}</div>`);
+                const image = $(`<img class="card-img-top" src="${business.image_url}" alt=""/>`);
+                const businessInfoBody = $(`<div class="card-body"></div>`)
+                const name = $(`<h2 class="card-title mb-1">${business.name}</h2>`);
+                const rate = $(`<div class="rating mb-1" style="width: ${business.rating * 16}px;">${rating}</div>`);
+                const phone = $(`<p class="mb-1">${business.display_phone}</p>`);
+                const address = business.location.display_address.length > 0 ? `<p class="mb-2">${[...new Set(business.location.display_address)].join(', ')}</p>` : null;
+                const moreInfo = $(`<a href="${business.url}" target="_blank" class="btn btn-primary">More Info</a>`)
+
+                businessInfoContainer.append(icons, image, businessInfoBody);
+                businessInfoBody.append(name, rate, phone, address, moreInfo);
+                infoBody.prepend(businessInfoContainer);
+            }
+
+            showBusinessInfo(business);
+        })
+    })
 }
+
+let selectedCategories = [];
+
+const categorySelector = () => {
+    const categoryContainer = $(`<div id="categories"></div>`);
+    categoryContainer.on('mousewheel', e => {
+        categoryContainer[0].scrollLeft += e.originalEvent.deltaY
+    })
+    root.append(categoryContainer)
+    for (let category in categories) {
+        category = categories[category];
+        const button = $(`<button class="btn btn-sm ${category.colour} d-flex align-items-center rounded-pill" value="${category.alias}">${category.icon}<p class="mb-0">${category.title}</p></button>`)
+        categoryContainer.append(button);
+        button.on('click', e => {
+            button.toggleClass('active');
+            if (button.hasClass('active')) {
+                selectedCategories.push(category.alias);
+            } else {
+                selectedCategories = selectedCategories.filter(cat => cat !== category.alias);
+            }
+            getBusinesses(L.latLng(centre.data.lat, centre.data.lon), { categories: selectedCategories.join(',') }, data => {
+                addBusinessMarkers(data)
+            })
+        })
+    }
+}
+
+categorySelector();
+
+const renderNews = articles => {
+    newsArticles.empty();
+    const newsTitle = $(`<h2 class="fs-5">Latest News</h2>`);
+    const carousel = $(`<div id="news" class="carousel carousel-dark slide" data-bs-ride="true"></div>`);
+    const indicators = $(`<div class="carousel-indicators">`);
+    const inner = $(`<div class="carousel-inner">`);
+    const prev = $(`<button class="carousel-control-prev" type="button" data-bs-target="#news" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="false"></span><span class="visually-hidden">Previous</span></button>`);
+    const next = $(`<button class="carousel-control-next" type="button" data-bs-target="#news" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="false"></span><span class="visually-hidden">Next</span></button>`);
+
+    newsArticles.append(newsTitle, carousel);
+    carousel.append(indicators, inner, prev, next);
+
+    if (articles.length > 0) {
+        articles.forEach((article,i) => {
+            const indicator = $(`<button type="button" data-bs-target="#news" data-bs-slide-to="${i}"${i===0 ? ' class="active" aria-current="true"' : ''} aria-label="Slide 1"></button>`)
+            const card = $(`<figure class="card px-5 pb-3 rounded-3 bg-light bg-gradient carousel-item${i === 0 ? ' active' : ''}"></figure>`);
+            const text = $(`<div class="card-body"><img src="${article.image}" alt="" /><h5 class="card-title mb-1">${article.title}</h5><small class="mb-1">published at ${new Date(article.publishedAt).toLocaleDateString()}</small><blockquote class="mb-1">${article.description}</blockquote><p class="card-text mb-1">${article.content}</p><small class="mb-1">by <i>${article.source.name}</i></small><a class="stretched-link" href="${article.url}" target="_blank" class="row g-0"><p class="card-text"><small class="text-muted">${article.url}</small></p></a></div>`);
+    
+            indicators.append(indicator);
+            inner.append(card);
+            card.append(text);
+        })
+    } else {
+        const indicator = $(`<button type="button" data-bs-target="#news" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>`)
+        const card = $(`<figure class="card px-5 pb-3 rounded-3 bg-light bg-gradient carousel-item active"></figure>`);
+        const text = $(`<div class="card-body"><h5 class="card-title">No News Available</h5><p class="card-text">There's no news available for the current country.</p><a class="stretched-link" href="#" target="_blank" class="row g-0"><p class="card-text"><small class="text-muted"></small></p></a></div>`);
+
+        indicators.append(indicator);
+        inner.append(card);
+        card.append(text);
+    }
+}
+
+// renderNews(news.articles)
 
 // Callback HELLLLLLLLLLLLL
 // const getCurrentLocation = () => {
@@ -1123,7 +1243,7 @@ const addBusinessMarkers = data => {
 //     });
 // }
 
-const getCurrentLocation = (latLng) => {
+const getCurrentLocation = latLng => {
     AJAXQueue.forEach(request => {
         request.abort();
     })
@@ -1137,6 +1257,10 @@ const getCurrentLocation = (latLng) => {
         renderAlertAddress(data);
         renderMenuAddress(data.results[0]);
         if (data.results[0].country_code && currentCountry.toLowerCase() !== data.results[0].country_code) {
+            getNews(data.results[0].country_code, data => {
+                console.log(data)
+                renderNews(data.articles)
+            })
             countrySelect.val(data.results[0].country_code.toUpperCase())
             if (outline.hasClass('active')) {
                 showGeoLayer(data.results[0].country_code);
@@ -1152,7 +1276,7 @@ const getCurrentLocation = (latLng) => {
         })
     });
 
-    getBusinesses(latLng, {}, data => {
+    getBusinesses(latLng, { categories: selectedCategories.join(',') }, data => {
         addBusinessMarkers(data)
     });
     getWeather(lat, lng, data => {
@@ -1256,7 +1380,7 @@ const renderMainElements = () => {
     moreInfoMenu.append(info);
     info.append(infoHeader, infoBody, infoFooter);
     infoHeader.append(infoHeaderText, infoClose);
-    infoBody.append(addressList, formattedAddress, countryState, continent, capital, population, areaSqKm, menuWeather, currencyList, wikis);
+    infoBody.append(addressList, formattedAddress, countryState, continent, capital, population, areaSqKm, menuWeather, newsArticles, currencyList, wikis);
     infoFooter.append(powered, attrib);
 
     for (let name in attributions) {
