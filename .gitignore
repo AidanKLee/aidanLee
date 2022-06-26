@@ -1,9 +1,9 @@
-.env
-prod.env
+# .env
+# prod.env
 node_modules/
-task/public/
-dist/
-build/
+# task/public/
+# dist/
+# build/
 
 vendor/
 composer.lock

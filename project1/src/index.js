@@ -27,22 +27,7 @@ import cats from './assets/json/mainCategories.json';
 import allCats from './assets/json/categories.json';
 import colours from './assets/json/colours.json';
 
-import news from './assets/json/newsTest.json'
-
-import './style.css';
-
-const categories = {};
-const allCategories = {};
-
-let colourIndex = 0;
-cats.forEach(cat => {
-    cat.colour = colours[colourIndex];
-    categories[cat.alias] = cat
-    colourIndex = colourIndex === 9 ? 0 : colourIndex + 1;
-});
-
-allCats.categories.forEach(cat => allCategories[cat.alias] = cat);
-
+import './assets/css/style.css';
 
 /***************************************************************************************************/
 // Global Variables
@@ -97,18 +82,18 @@ const attributions = {
 /***************************************************************************************************/
 const tiles = [
     {
-        name: 'primary',
-        img: primary,
-        key: process.env.JAWG,
-        href: `https://tile.jawg.io/jawg-sunny/{z}/{x}/{y}.png?access-token=`,
-        attribution: '<a href="http://jawg.io" data-bs-toggle="tooltip" title="Tiles Courtesy of Jawg Maps" target="_blank" class="jawg-attrib">&copy; <b>Jawg</b>Maps</a> | <a href="https://www.openstreetmap.org/copyright" data-bs-toggle="tooltip" title="OpenStreetMap is open data licensed under ODbL" target="_blank" class="osm-attrib">&copy; OSM contributors</a>'
-    },
-    {
         name: 'terrain',
         img: terrain,
         key: process.env.THUNDERFOREST,
         href: `https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey=`,
         attribution: '<a href="https://www.thunderforest.com/" data-bs-toggle="tooltip" title="Tiles Courtesy of Thunderforest Maps" target="_blank" class="jawg-attrib">&copy; <b>Thunderforest</b>Maps</a> | <a href="https://www.openstreetmap.org/copyright" data-bs-toggle="tooltip" title="OpenStreetMap is open data licensed under ODbL" target="_blank" class="osm-attrib">&copy; OSM contributors</a>'
+    },
+    {
+        name: 'primary',
+        img: primary,
+        key: process.env.JAWG,
+        href: `https://tile.jawg.io/jawg-sunny/{z}/{x}/{y}.png?access-token=`,
+        attribution: '<a href="http://jawg.io" data-bs-toggle="tooltip" title="Tiles Courtesy of Jawg Maps" target="_blank" class="jawg-attrib">&copy; <b>Jawg</b>Maps</a> | <a href="https://www.openstreetmap.org/copyright" data-bs-toggle="tooltip" title="OpenStreetMap is open data licensed under ODbL" target="_blank" class="osm-attrib">&copy; OSM contributors</a>'
     },
     {
         name: 'dark',
@@ -140,6 +125,7 @@ let currentExchangeRates = null;
 let geoLayer = null;
 let moveTimeout = null;
 let searchTimeout = null;
+let selectedCategories = [];
 
 // Head & Icons
 /***************************************************************************************************/
@@ -242,7 +228,19 @@ const infoFooter = $('<div class="modal-footer d-block"></div>');
 const powered = $(`<p class="fw-bold text-center">Powered By</p>`);
 const attrib = $(`<div id="attribution" class ="d-flex justify-content-center"></div>`);
 
+// Categories For Places API
+/***************************************************************************************************/
+const categories = {};
+const allCategories = {};
 
+let colourIndex = 0;
+cats.forEach(cat => {
+    cat.colour = colours[colourIndex];
+    categories[cat.alias] = cat
+    colourIndex = colourIndex === 9 ? 0 : colourIndex + 1;
+});
+
+allCats.categories.forEach(cat => allCategories[cat.alias] = cat);
 
 
 
@@ -290,6 +288,32 @@ const renderNoLocation = () => {
 /***************************************************************************************************/
 // Refreshable Components
 /***************************************************************************************************/
+
+// The Business/Places Category Selector
+/***************************************************************************************************/
+const renderCategorySelector = () => {
+    const categoryContainer = $(`<div id="categories"></div>`);
+    categoryContainer.on('mousewheel', e => {
+        categoryContainer[0].scrollLeft += e.originalEvent.deltaY
+    })
+    root.append(categoryContainer)
+    for (let category in categories) {
+        category = categories[category];
+        const button = $(`<button class="btn btn-sm ${category.colour} d-flex align-items-center rounded-pill" value="${category.alias}">${category.icon}<p class="mb-0">${category.title}</p></button>`)
+        categoryContainer.append(button);
+        button.on('click', e => {
+            button.toggleClass('active');
+            if (button.hasClass('active')) {
+                selectedCategories.push(category.alias);
+            } else {
+                selectedCategories = selectedCategories.filter(cat => cat !== category.alias);
+            }
+            getBusinesses(L.latLng(centre.data.lat, centre.data.lon), { categories: selectedCategories.join(',') }, data => {
+                addBusinessMarkers(data)
+            })
+        })
+    }
+}
 
 // More Info Menu - Weather Section
 /***************************************************************************************************/
@@ -423,6 +447,41 @@ const renderCountryData = data => {
     capital.html(`<span class="fw-bolder">Capital City: </span>${data.capital}`);
     population.html(`<span class="fw-bolder">Population: </span>${data.population}`);
     areaSqKm.html(`<span class="fw-bolder">Land Area: </span>${Math.round(data.areaInSqKm)} km<sup>2</sup>`);
+}
+
+// More Info Menu - News Articles
+/***************************************************************************************************/
+const renderNews = articles => {
+    newsArticles.empty();
+    const newsTitle = $(`<h2 class="fs-5">Latest News</h2>`);
+    const carousel = $(`<div id="news" class="carousel carousel-dark slide" data-bs-ride="true"></div>`);
+    const indicators = $(`<div class="carousel-indicators">`);
+    const inner = $(`<div class="carousel-inner">`);
+    const prev = $(`<button class="carousel-control-prev" type="button" data-bs-target="#news" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="false"></span><span class="visually-hidden">Previous</span></button>`);
+    const next = $(`<button class="carousel-control-next" type="button" data-bs-target="#news" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="false"></span><span class="visually-hidden">Next</span></button>`);
+
+    newsArticles.append(newsTitle, carousel);
+    carousel.append(indicators, inner, prev, next);
+
+    if (articles.length > 0) {
+        articles.forEach((article,i) => {
+            const indicator = $(`<button type="button" data-bs-target="#news" data-bs-slide-to="${i}"${i===0 ? ' class="active" aria-current="true"' : ''} aria-label="Slide 1"></button>`)
+            const card = $(`<figure class="card px-5 pb-3 rounded-3 bg-light bg-gradient carousel-item${i === 0 ? ' active' : ''}"></figure>`);
+            const text = $(`<div class="card-body"><img src="${article.image}" alt="" /><h5 class="card-title mb-1">${article.title}</h5><small class="mb-1">published at ${new Date(article.publishedAt).toLocaleDateString()}</small><blockquote class="mb-1">${article.description}</blockquote><p class="card-text mb-1">${article.content}</p><small class="mb-1">by <i>${article.source.name}</i></small><a class="stretched-link" href="${article.url}" target="_blank" class="row g-0"><p class="card-text"><small class="text-muted">${article.url}</small></p></a></div>`);
+    
+            indicators.append(indicator);
+            inner.append(card);
+            card.append(text);
+        })
+    } else {
+        const indicator = $(`<button type="button" data-bs-target="#news" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>`)
+        const card = $(`<figure class="card px-5 pb-3 rounded-3 bg-light bg-gradient carousel-item active"></figure>`);
+        const text = $(`<div class="card-body"><h5 class="card-title">No News Available</h5><p class="card-text">There's no news available for the current country.</p><a class="stretched-link" href="#" target="_blank" class="row g-0"><p class="card-text"><small class="text-muted"></small></p></a></div>`);
+
+        indicators.append(indicator);
+        inner.append(card);
+        card.append(text);
+    }
 }
 
 // Custom Base Layer Controls
@@ -904,6 +963,75 @@ const extractForecastData = (res) => {
     return forecast;
 }
 
+// Add Category Icons to the Business/Place
+/***************************************************************************************************/
+const addIconsToBusiness = business => {
+    const icons = [];
+    business.categories.forEach(category => {
+        let { alias } = category;
+        const getIcon = alias => {
+            if (alias in categories) {
+                if (!icons.includes(alias)) {
+                    icons.push(alias);
+                }
+            } else {
+                alias = allCategories[alias].parent_aliases[0];
+                getIcon(alias);
+            }
+        }
+        getIcon(alias);
+    })
+    return { ...business, icons: icons.map(alias => { return {img: categories[alias].icon, colour: categories[alias].colour} }) };
+}
+
+// Adds a Marker For Each Business In The Business API Response
+/***************************************************************************************************/
+const addBusinessMarkers = data => {
+    if (businessLayerGroup) {
+        businessLayerGroup.clearLayers();
+    } else {
+        businessLayerGroup = L.layerGroup().addTo(map);
+    }
+
+    data.businesses.forEach(business => {
+        let rating = '';
+        const stars = new Array(Math.ceil(business.rating)).fill(`<svg class="star" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-star"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`);
+        stars.forEach(star => {
+            rating += star;
+        })
+        const latLng = L.latLng(business.coordinates.latitude, business.coordinates.longitude);
+        const icon = L.divIcon({ className: `business ${business.icons[0].colour}`, iconSize: [48, 48], html: business.icons[0].img + `<div class="business-data card"><img src="${business.image_url}" alt=""/><div class="card-body"><p class="fs-6 fw-semibold mb-1 lh-1">${business.name}</p><div class="rating mb-1" style="width: ${business.rating * 16}px;">${rating}</div>${business.location.display_address.length > 0 ? [...new Set(business.location.display_address.map(line => `<p class="mb-0">${line}</p>`))].join('') : null}</div></div>`});
+        const marker = L.marker(latLng, { icon, interactive: true }).addTo(businessLayerGroup);
+
+        marker.addEventListener('click', e => {
+            if (Object.keys(markerLayerGroup._layers).length > 0) {
+                markerLayerGroup.clearLayers();
+            }
+            addLocationMarker(latLng, business.icons[0].img);
+            if (!moreInfo.hasClass('active')) {
+                toggleMenu();
+            }
+            const showBusinessInfo = (business) => {
+                const businessInfoContainer = $(`<div id="business-info" class="card mb-3"></div>`);
+                const icons = $(`<div class="card-icons">${business.icons.map(icon => `<div class="${icon.colour} border">${icon.img}</div>`).join('')}</div>`);
+                const image = $(`<img class="card-img-top" src="${business.image_url}" alt=""/>`);
+                const businessInfoBody = $(`<div class="card-body"></div>`)
+                const name = $(`<h2 class="card-title mb-1">${business.name}</h2>`);
+                const rate = $(`<div class="rating mb-1" style="width: ${business.rating * 16}px;">${rating}</div>`);
+                const phone = $(`<p class="mb-1">${business.display_phone}</p>`);
+                const address = business.location.display_address.length > 0 ? `<p class="mb-2">${[...new Set(business.location.display_address)].join(', ')}</p>` : null;
+                const moreInfo = $(`<a href="${business.url}" target="_blank" class="btn btn-primary">More Info</a>`)
+
+                businessInfoContainer.append(icons, image, businessInfoBody);
+                businessInfoBody.append(name, rate, phone, address, moreInfo);
+                infoBody.prepend(businessInfoContainer);
+            }
+
+            showBusinessInfo(business);
+        })
+    })
+}
+
 
 
 
@@ -1073,176 +1201,8 @@ const getBusinesses = async (latLng, { categories = '', q = '' } = {}, cb) => {
     return res.data;
 }
 
-const addIconsToBusiness = business => {
-    const icons = [];
-    business.categories.forEach(category => {
-        let { alias } = category;
-        const getIcon = alias => {
-            if (alias in categories) {
-                if (!icons.includes(alias)) {
-                    icons.push(alias);
-                }
-            } else {
-                alias = allCategories[alias].parent_aliases[0];
-                getIcon(alias);
-            }
-        }
-        getIcon(alias);
-    })
-    return { ...business, icons: icons.map(alias => { return {img: categories[alias].icon, colour: categories[alias].colour} }) };
-}
-
-const addBusinessMarkers = data => {
-    if (businessLayerGroup) {
-        businessLayerGroup.clearLayers();
-    } else {
-        businessLayerGroup = L.layerGroup().addTo(map);
-    }
-
-    data.businesses.forEach(business => {
-        let rating = '';
-        const stars = new Array(Math.ceil(business.rating)).fill(`<svg class="star" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-star"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`);
-        stars.forEach(star => {
-            rating += star;
-        })
-        const latLng = L.latLng(business.coordinates.latitude, business.coordinates.longitude);
-        const icon = L.divIcon({ className: `business ${business.icons[0].colour}`, iconSize: [48, 48], html: business.icons[0].img + `<div class="business-data card"><img src="${business.image_url}" alt=""/><div class="card-body"><p class="fs-6 fw-semibold mb-1 lh-1">${business.name}</p><div class="rating mb-1" style="width: ${business.rating * 16}px;">${rating}</div>${business.location.display_address.length > 0 ? [...new Set(business.location.display_address.map(line => `<p class="mb-0">${line}</p>`))].join('') : null}</div></div>`});
-        const marker = L.marker(latLng, { icon, interactive: true }).addTo(businessLayerGroup);
-
-        marker.addEventListener('click', e => {
-            if (Object.keys(markerLayerGroup._layers).length > 0) {
-                markerLayerGroup.clearLayers();
-            }
-            addLocationMarker(latLng, business.icons[0].img);
-            if (!moreInfo.hasClass('active')) {
-                toggleMenu();
-            }
-            const showBusinessInfo = (business) => {
-                const businessInfoContainer = $(`<div id="business-info" class="card mb-3"></div>`);
-                const icons = $(`<div class="card-icons">${business.icons.map(icon => `<div class="${icon.colour} border">${icon.img}</div>`).join('')}</div>`);
-                const image = $(`<img class="card-img-top" src="${business.image_url}" alt=""/>`);
-                const businessInfoBody = $(`<div class="card-body"></div>`)
-                const name = $(`<h2 class="card-title mb-1">${business.name}</h2>`);
-                const rate = $(`<div class="rating mb-1" style="width: ${business.rating * 16}px;">${rating}</div>`);
-                const phone = $(`<p class="mb-1">${business.display_phone}</p>`);
-                const address = business.location.display_address.length > 0 ? `<p class="mb-2">${[...new Set(business.location.display_address)].join(', ')}</p>` : null;
-                const moreInfo = $(`<a href="${business.url}" target="_blank" class="btn btn-primary">More Info</a>`)
-
-                businessInfoContainer.append(icons, image, businessInfoBody);
-                businessInfoBody.append(name, rate, phone, address, moreInfo);
-                infoBody.prepend(businessInfoContainer);
-            }
-
-            showBusinessInfo(business);
-        })
-    })
-}
-
-let selectedCategories = [];
-
-const categorySelector = () => {
-    const categoryContainer = $(`<div id="categories"></div>`);
-    categoryContainer.on('mousewheel', e => {
-        categoryContainer[0].scrollLeft += e.originalEvent.deltaY
-    })
-    root.append(categoryContainer)
-    for (let category in categories) {
-        category = categories[category];
-        const button = $(`<button class="btn btn-sm ${category.colour} d-flex align-items-center rounded-pill" value="${category.alias}">${category.icon}<p class="mb-0">${category.title}</p></button>`)
-        categoryContainer.append(button);
-        button.on('click', e => {
-            button.toggleClass('active');
-            if (button.hasClass('active')) {
-                selectedCategories.push(category.alias);
-            } else {
-                selectedCategories = selectedCategories.filter(cat => cat !== category.alias);
-            }
-            getBusinesses(L.latLng(centre.data.lat, centre.data.lon), { categories: selectedCategories.join(',') }, data => {
-                addBusinessMarkers(data)
-            })
-        })
-    }
-}
-
-categorySelector();
-
-const renderNews = articles => {
-    newsArticles.empty();
-    const newsTitle = $(`<h2 class="fs-5">Latest News</h2>`);
-    const carousel = $(`<div id="news" class="carousel carousel-dark slide" data-bs-ride="true"></div>`);
-    const indicators = $(`<div class="carousel-indicators">`);
-    const inner = $(`<div class="carousel-inner">`);
-    const prev = $(`<button class="carousel-control-prev" type="button" data-bs-target="#news" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="false"></span><span class="visually-hidden">Previous</span></button>`);
-    const next = $(`<button class="carousel-control-next" type="button" data-bs-target="#news" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="false"></span><span class="visually-hidden">Next</span></button>`);
-
-    newsArticles.append(newsTitle, carousel);
-    carousel.append(indicators, inner, prev, next);
-
-    if (articles.length > 0) {
-        articles.forEach((article,i) => {
-            const indicator = $(`<button type="button" data-bs-target="#news" data-bs-slide-to="${i}"${i===0 ? ' class="active" aria-current="true"' : ''} aria-label="Slide 1"></button>`)
-            const card = $(`<figure class="card px-5 pb-3 rounded-3 bg-light bg-gradient carousel-item${i === 0 ? ' active' : ''}"></figure>`);
-            const text = $(`<div class="card-body"><img src="${article.image}" alt="" /><h5 class="card-title mb-1">${article.title}</h5><small class="mb-1">published at ${new Date(article.publishedAt).toLocaleDateString()}</small><blockquote class="mb-1">${article.description}</blockquote><p class="card-text mb-1">${article.content}</p><small class="mb-1">by <i>${article.source.name}</i></small><a class="stretched-link" href="${article.url}" target="_blank" class="row g-0"><p class="card-text"><small class="text-muted">${article.url}</small></p></a></div>`);
-    
-            indicators.append(indicator);
-            inner.append(card);
-            card.append(text);
-        })
-    } else {
-        const indicator = $(`<button type="button" data-bs-target="#news" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>`)
-        const card = $(`<figure class="card px-5 pb-3 rounded-3 bg-light bg-gradient carousel-item active"></figure>`);
-        const text = $(`<div class="card-body"><h5 class="card-title">No News Available</h5><p class="card-text">There's no news available for the current country.</p><a class="stretched-link" href="#" target="_blank" class="row g-0"><p class="card-text"><small class="text-muted"></small></p></a></div>`);
-
-        indicators.append(indicator);
-        inner.append(card);
-        card.append(text);
-    }
-}
-
-// renderNews(news.articles)
-
-// Callback HELLLLLLLLLLLLL
-// const getCurrentLocation = () => {
-//     AJAXQueue.forEach(request => {
-//         request.abort();
-//     })
-//     AJAXQueue = [];
-//     let { lat, lng } = map.getCenter();
-//     getCurrentAddress(lat, lng, data => {
-//         centre.data = data.results[0];
-//         renderAlertAddress(data);
-//         renderMenuAddress(data.results[0]);
-//         if (data.results[0].country_code && currentCountry.toLowerCase() !== data.results[0].country_code) {
-//             // if (!currentCountry) {
-//                 countrySelect.val(data.results[0].country_code.toUpperCase())
-//             // }
-//             if (outline.hasClass('active')) {
-//                 showGeoLayer(data.results[0].country_code);
-//             }
-//         }
-//         getCountryData(data.results[0].country_code, true, data => {
-//             centre.country = data;
-//             renderCountryData(data);
-//             getExchangeRates(data.currencyCode, data => {
-//                 renderExchangeRates(data)
-//             })
-//         })
-//         getWeather(lat, lng, data => {
-//             centre.weather = data;
-//             renderWeather(data);
-//         })
-//         getForecast(lat, lng, data => {
-//             centre.forecast = data;
-//             renderMenuWeather(data);
-//         })
-//     });
-        
-//     const townBounds = L.latLng(lat,lng).toBounds(10000);
-//     getWiki(townBounds, data => {
-//         renderWikis(data);
-//     });
-// }
-
+// Get Current Location # Calls the api's to get data for the "more-info-menu"
+/***************************************************************************************************/
 const getCurrentLocation = latLng => {
     AJAXQueue.forEach(request => {
         request.abort();
@@ -1258,7 +1218,6 @@ const getCurrentLocation = latLng => {
         renderMenuAddress(data.results[0]);
         if (data.results[0].country_code && currentCountry.toLowerCase() !== data.results[0].country_code) {
             getNews(data.results[0].country_code, data => {
-                console.log(data)
                 renderNews(data.articles)
             })
             countrySelect.val(data.results[0].country_code.toUpperCase())
@@ -1364,10 +1323,9 @@ const renderMainElements = () => {
         }
     })
 
-    // Navigation Button
+    // Category Selector
     /***************************************************************************************************/
-    // navigation.html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-navigation"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>');
-    // bottomRightControls.prepend(navigation);
+    renderCategorySelector();
 
     // My Location Button
     /***************************************************************************************************/
@@ -1623,26 +1581,5 @@ $(() => {
     // Got To Users Location
     /***************************************************************************************************/
     goToMyLocation(map);
-
-    // Get Location Data For The Centre Of The Map
-    /***************************************************************************************************/
-
-    // On a single mouse click hide/show the ui
-    // let clickTimeout = null;
-    // let clickCount = 0;
-    // map.addEventListener('click', e => {
-    //     clickCount ++;
-    //     if (clickTimeout) {
-    //         clearTimeout(clickTimeout);
-    //     }
-    //     clickTimeout = setTimeout(() => {
-    //         if (clickCount === 1) {
-    //             const controls = $('.controls');
-    //             controls.toggleClass('hide');
-    //         }
-    //         clickCount = 0;
-    //     }, 500)
-    // })
-
 
 })
