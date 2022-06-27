@@ -1251,7 +1251,7 @@ const getCurrentLocation = latLng => {
             const { countryName: country, north, south, east, west } = data;
             getEarthquakes({ north, south, east, west}, data => {
                 if (data.length > 0) {
-                    renderToast({name: 'XPlore', src: logo, text: `The most recent earthquake in ${country} was a magnitude ${data[0].magnitude}, recorded on ${new Date(data[0].datetime).toDateString()}.`});
+                    renderToast({name: 'XPlore', src: logo, text: `The most recent earthquake in ${country} was a magnitude of ${data[0].magnitude}, recorded on ${new Date(data[0].datetime).toDateString()}.`});
                 } else {
                     renderToast({name: 'XPlore', src: logo, text: `There have been no recently reported earthquakes in ${country}.`});
                 }
