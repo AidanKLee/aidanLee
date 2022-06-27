@@ -74,7 +74,7 @@ NOTE: You can choose whether to host the app on one single domain for the fronte
 - `dist` is created on the first build and contains the current build of the app whether that be development or production.
 - `src` contains the original source code and assets for the app.
 - `.env` contains the development environment variables.
-- `prod.env` contains the default production envirinment variables.
+- `prod.env` contains the default production environment variables.
 - `example.env` contains a template for the environment variables. This file is referenced by webpack when creating builds to ensure no variables are missing.
 - Files ending in `.php` contain backend script for fetching from external API's.
 - `composer.json` contains the PHP dependencies to be installed by running `composer install`.
