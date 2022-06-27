@@ -900,6 +900,12 @@ div#categories {
     overflow-x: scroll;
     padding-left: 8px;
     z-index: 900;
+    transition: .3s;
+}
+
+div#categories.hidden {
+    opacity: 0;
+    pointer-events: none;
 }
 
 @media only screen and (max-width: 720px) {

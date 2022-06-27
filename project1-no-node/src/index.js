@@ -9,8 +9,6 @@ import cats from './assets/json/mainCategories.json' assert { type: "json" };
 import allCats from './assets/json/categories.json' assert { type: "json" };
 import colours from './assets/json/colours.json' assert { type: "json" };
 
-// console.log($)
-
 /***************************************************************************************************/
 // Global Variables
 /***************************************************************************************************/
@@ -92,7 +90,7 @@ const tiles = [
     }
 ]
 
-const backendHost = 'http://localhost:8080/project1/';
+const backendHost = 'http://localhost/project1';
 
 // Current State
 /***************************************************************************************************/
@@ -125,6 +123,7 @@ const root = $('#root');
 // Map Container & Controls
 /***************************************************************************************************/
 const mapContainer = $('<div id="map"></div>');
+const categoryContainer = $(`<div id="categories"></div>`);
 
 const crosshair = $('<svg id="crosshair" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather feather-crosshair"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>');
 const loader = $(`<div id="loader" class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>`);
@@ -275,14 +274,13 @@ const renderNoLocation = () => {
 // The Business/Places Category Selector
 /***************************************************************************************************/
 const renderCategorySelector = () => {
-    const categoryContainer = $(`<div id="categories"></div>`);
     categoryContainer.on('mousewheel', e => {
         categoryContainer[0].scrollLeft += e.originalEvent.deltaY
     })
     root.append(categoryContainer)
     for (let category in categories) {
         category = categories[category];
-        const button = $(`<button class="btn btn-sm ${category.colour} d-flex align-items-center rounded-pill" value="${category.alias}">${category.icon}<p class="mb-0">${category.title}</p></button>`)
+        const button = $(`<button class="btn btn-sm ${category.colour} d-flex align-items-center rounded-pill border-0" value="${category.alias}">${category.icon}<p class="mb-0">${category.title}</p></button>`)
         categoryContainer.append(button);
         button.on('click', e => {
             button.toggleClass('active');
@@ -385,13 +383,14 @@ const renderExchangeRates = data => {
 /***************************************************************************************************/
 const renderWikis = async (entries = []) => {
     wikis.empty();
+    const wikiHeader = $(`<h2 class="fs-5">Wikipedia</h2>`)
     const carousel = $(`<div id="wiki" class="carousel carousel-dark slide" data-bs-ride="true"></div>`);
     const indicators = $(`<div class="carousel-indicators">`);
     const inner = $(`<div class="carousel-inner">`);
     const prev = $(`<button class="carousel-control-prev" type="button" data-bs-target="#wiki" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="false"></span><span class="visually-hidden">Previous</span></button>`);
     const next = $(`<button class="carousel-control-next" type="button" data-bs-target="#wiki" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="false"></span><span class="visually-hidden">Next</span></button>`);
 
-    wikis.append(carousel);
+    wikis.append(wikiHeader, carousel);
     carousel.append(indicators, inner, prev, next);
 
     if (entries.length > 0) {
@@ -428,8 +427,8 @@ const renderMenuAddress = data => {
 const renderCountryData = data => {
     continent.html(`<span class="fw-bolder">Continent: </span>${data.continentName}`);
     capital.html(`<span class="fw-bolder">Capital City: </span>${data.capital}`);
-    population.html(`<span class="fw-bolder">Population: </span>${data.population}`);
-    areaSqKm.html(`<span class="fw-bolder">Land Area: </span>${Math.round(data.areaInSqKm)} km<sup>2</sup>`);
+    population.html(`<span class="fw-bolder">Population: </span>${formatBigInt(data.population)}`);
+    areaSqKm.html(`<span class="fw-bolder">Land Area: </span>${formatBigInt(Math.round(data.areaInSqKm))} km<sup>2</sup>`);
 }
 
 // More Info Menu - News Articles
@@ -446,7 +445,7 @@ const renderNews = articles => {
     newsArticles.append(newsTitle, carousel);
     carousel.append(indicators, inner, prev, next);
 
-    if (articles.length > 0) {
+    if (articles && articles.length > 0) {
         articles.forEach((article,i) => {
             const indicator = $(`<button type="button" data-bs-target="#news" data-bs-slide-to="${i}"${i===0 ? ' class="active" aria-current="true"' : ''} aria-label="Slide 1"></button>`)
             const card = $(`<figure class="card px-5 pb-3 rounded-3 bg-light bg-gradient carousel-item${i === 0 ? ' active' : ''}"></figure>`);
@@ -555,7 +554,7 @@ const renderResults = (res, map) => {
                 }
                 addLocationMarker(latLng)
                 getCurrentAddress(lat, lng, data => {
-                    renderToast({name: 'XPlore', src: logo, text: `Moved to ${data.results[0].formatted}.`});
+                    renderToast({name: 'XPlore', src: logo, text: `Moving to ${data.results[0].formatted}.`});
                 })
                 goToLocation(latLng, latLngBounds);
             })
@@ -805,7 +804,6 @@ const addLocationMarker = (latLng, html = `<svg xmlns="http://www.w3.org/2000/sv
     }
 
     marker.clickCount = 0;
-
     getCurrentLocation(latLng);
     crosshair.fadeOut();
 
@@ -1015,6 +1013,18 @@ const addBusinessMarkers = data => {
     })
 }
 
+const formatBigInt = int => {
+    int = int.toString();
+    if (int.lengt < 4) {
+        return int;
+    }
+    int = int.split('').reverse();
+    for (let i=3; i<int.length; i+=3) {
+        int[i] += ',';
+    }
+    return int.reverse().join('');
+}
+
 
 
 
@@ -1078,13 +1088,13 @@ const getCountryData = async (country, isCentre, cb) => {
     if (country && country.toLowerCase() !== currentCountry.toLowerCase()) {
         if (isCentre) {
             currentCountry = country;
-            const res = await pajax({
-                url: `${backendHost}/api/country_info.php`,
-                type: 'POST', dataType: 'json', data: { country }
-            });
-            if (cb) { cb(res.data[0]) };
-            return res.data[0];
         }
+        const res = await pajax({
+            url: `${backendHost}/api/country_info.php`,
+            type: 'POST', dataType: 'json', data: { country }
+        });
+        if (cb) { cb(res.data[0]) };
+        return res.data[0];
     }
 }
 
@@ -1313,6 +1323,15 @@ const renderMainElements = () => {
     // Map # Show The My Location Left Icon
     map.addEventListener('move', e => {
         myLocationLeft();
+    })
+
+    // Map # Add Or Remove The Category Selector At The Top
+    map.addEventListener('zoomend', e => {
+        if (map.getZoom() > 10 && categoryContainer.hasClass('hidden')) {
+            categoryContainer.removeClass('hidden')
+        } else if (map.getZoom() <= 10 && !categoryContainer.hasClass('hidden')) {
+            categoryContainer.addClass('hidden')
+        }
     })
     
     // Map # Get Current/Selected Location Data After Moving (If it has moved more than once within a second, cancel the initial call)
@@ -1551,12 +1570,14 @@ fullscreenButton.on('click', e => {
 // Country Select # Move To The Selected Country On Change
 /*****************************************************************************************/
 countrySelect.on('change', e => {
-    getCountryData(e.target.value, true, data => {
+    getCountryData(e.target.value, false, data => {
         const { north, east, south, west } = data;
         const corner1 = L.latLng(north, east);
         const corner2 = L.latLng(south, west);
 
-        removeMarkers();
+        if (Object.keys(markerLayerGroup._layers).length === 1) {
+            removeMarkers();
+        }
 
         map.flyToBounds(L.latLngBounds(corner1, corner2));
         if (outline.hasClass('active')) {
