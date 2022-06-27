@@ -1250,7 +1250,11 @@ const getCurrentLocation = latLng => {
         getCountryData(data.results[0].country_code, true, data => {
             const { countryName: country, north, south, east, west } = data;
             getEarthquakes({ north, south, east, west}, data => {
-                renderToast({name: 'XPlore', src: logo, text: `The most recent earthquake in ${country} was a magnitude ${data[0].magnitude}, recorded on ${new Date(data[0].datetime).toDateString()}.`});
+                if (data.length > 0) {
+                    renderToast({name: 'XPlore', src: logo, text: `The most recent earthquake in ${country} was a magnitude ${data[0].magnitude}, recorded on ${new Date(data[0].datetime).toDateString()}.`});
+                } else {
+                    renderToast({name: 'XPlore', src: logo, text: `There have been no recently reported earthquakes in ${country}.`});
+                }
             })
             centre.country = data;
             renderCountryData(data);
