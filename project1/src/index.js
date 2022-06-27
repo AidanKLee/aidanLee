@@ -1201,6 +1201,28 @@ const getBusinesses = async (latLng, { categories = '', q = '' } = {}, cb) => {
     return res.data;
 }
 
+// Get Earthquakes
+/***************************************************************************************************/
+const getEarthquakes = async (data, cb) => {
+    const res = await pajax({
+        url: process.env.BACKEND_HOST + '/earthquakes.php',
+        type: 'GET',
+        dataType: 'json',
+        data
+    });
+
+    res.data.earthquakes = res.data.earthquakes.sort((a,b) => {
+        a = a.datetime;
+        b = b.datetime;
+        if (a > b) { return -1 }
+        else if (a < b) { return +1 }
+        else { return 0 }
+    })
+
+    if (cb) { cb(res.data.earthquakes) };
+    return res.data.earthquakes;
+}
+
 // Get Current Location # Calls the api's to get data for the "more-info-menu"
 /***************************************************************************************************/
 const getCurrentLocation = latLng => {
@@ -1226,6 +1248,10 @@ const getCurrentLocation = latLng => {
             }
         }
         getCountryData(data.results[0].country_code, true, data => {
+            const { countryName: country, north, south, east, west } = data;
+            getEarthquakes({ north, south, east, west}, data => {
+                renderToast({name: 'XPlore', src: logo, text: `The most recent earthquake in ${country} was a magnitude ${data[0].magnitude}, recorded on ${new Date(data[0].datetime).toDateString()}.`});
+            })
             centre.country = data;
             renderCountryData(data);
             getExchangeRates(data.currencyCode, data => {
