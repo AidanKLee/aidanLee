@@ -1,12 +1,12 @@
 export default [
-    "indigo",
-    "pink",
     "red",
+    "orange-dark",
+    "orange",
+    "yellow",
+    "blue-dark",
     "cyan",
     "purple",
-    "yellow",
-    "teal",
-    "orange",
-    "green",
-    "grey"
+    "violet",
+    "pink",
+    "green-dark"
 ]

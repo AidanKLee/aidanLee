@@ -1,6 +1,3 @@
-import './modules/jquery/jquery.min.js';
-import './modules/leaflet/leaflet.js';
-import './modules/bootstrap/bootstrap.min.js';
 import K from './modules/kaigen/kaigen.js';
 
 import currencies from './assets/js/currencies.js';
@@ -62,18 +59,18 @@ const attributions = {
 /***************************************************************************************************/
 const tiles = [
     {
-        name: 'terrain',
-        img: './src/assets/images/terrain.png',
-        key: '0983b35182f944bf84d692bcae8fbc89',
-        href: `https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey=`,
-        attribution: '<a href="https://www.thunderforest.com/" data-bs-toggle="tooltip" title="Tiles Courtesy of Thunderforest Maps" target="_blank" class="jawg-attrib">&copy; <b>Thunderforest</b>Maps</a> | <a href="https://www.openstreetmap.org/copyright" data-bs-toggle="tooltip" title="OpenStreetMap is open data licensed under ODbL" target="_blank" class="osm-attrib">&copy; OSM contributors</a>'
-    },
-    {
         name: 'primary',
         img: './src/assets/images/primary.png',
         key: 'fvlhZyGiTztkqcQiO7ymVbhnINKH1ym3JjaKyBLHcmu28wCg5lts8D6rbjpYGQit',
         href: `https://tile.jawg.io/jawg-sunny/{z}/{x}/{y}.png?access-token=`,
         attribution: '<a href="http://jawg.io" data-bs-toggle="tooltip" title="Tiles Courtesy of Jawg Maps" target="_blank" class="jawg-attrib">&copy; <b>Jawg</b>Maps</a> | <a href="https://www.openstreetmap.org/copyright" data-bs-toggle="tooltip" title="OpenStreetMap is open data licensed under ODbL" target="_blank" class="osm-attrib">&copy; OSM contributors</a>'
+    },
+    {
+        name: 'terrain',
+        img: './src/assets/images/terrain.png',
+        key: '0983b35182f944bf84d692bcae8fbc89',
+        href: `https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey=`,
+        attribution: '<a href="https://www.thunderforest.com/" data-bs-toggle="tooltip" title="Tiles Courtesy of Thunderforest Maps" target="_blank" class="jawg-attrib">&copy; <b>Thunderforest</b>Maps</a> | <a href="https://www.openstreetmap.org/copyright" data-bs-toggle="tooltip" title="OpenStreetMap is open data licensed under ODbL" target="_blank" class="osm-attrib">&copy; OSM contributors</a>'
     },
     {
         name: 'dark',
@@ -97,7 +94,9 @@ const backendHost = 'http://localhost/project1';
 let map = null;
 let baseLayers = {};
 let markerLayerGroup = null;
-let businessLayerGroup = null;
+let businessLayerGroup = L.markerClusterGroup({
+    maxClusterRadius: 40
+});
 let location = null;
 let locationMarkerLatLng = null;
 let handleZoomEnd = null;
@@ -157,7 +156,6 @@ const searchBar = $('<div id="search-bar" class="input-group shadows"></div>');
 const searchResults = $('<div id="search-results" class="shadows-light"></div>');
 const resultsCollapse = new bootstrap.Collapse(searchResults);
 const resultList = $('<div id="result-list" class="list-group"></div>');
-// const menuButton = $('<button class="btn btn-primary" type="button" data-bs-toggle="tooltip" title="Menu"></button>');
 const input = $('<input id="q" type="text" class="form-control" placeholder="Go XPlore" aria-label="Search" autocomplete="off">');
 const countrySelect = $(`<select id="country" class="form-select" aria-label=" aria-label="Country Select"></select>`);
 const searchLabel = $('<label for="q" class="btn btn-light border" data-bs-toggle="tooltip" title="Search"></label>');
@@ -211,6 +209,11 @@ const wikis = $(`<div class="wiki"></div>`);
 const infoFooter = $('<div class="modal-footer d-block"></div>');
 const powered = $(`<p class="fw-bold text-center">Powered By</p>`);
 const attrib = $(`<div id="attribution" class ="d-flex justify-content-center"></div>`);
+
+// Prevent Double Clicks From Adding A Marker
+/***************************************************************************************************/
+let clickTimeout = null;
+let clickCount = 0;
 
 // Categories For Places API
 /***************************************************************************************************/
@@ -280,7 +283,7 @@ const renderCategorySelector = () => {
     root.append(categoryContainer)
     for (let category in categories) {
         category = categories[category];
-        const button = $(`<button class="btn btn-sm ${category.colour} d-flex align-items-center rounded-pill border-0" value="${category.alias}">${category.icon}<p class="mb-0">${category.title}</p></button>`)
+        const button = $(`<button class="btn btn-sm ${category.colour} d-flex align-items-center rounded-pill border-0" value="${category.alias}"><i class="fa-solid ${category.icon} me-2"></i><p class="mb-0">${category.title}</p></button>`)
         categoryContainer.append(button);
         button.on('click', e => {
             button.toggleClass('active');
@@ -777,21 +780,39 @@ const toggleFullscreen = () => {
 // Handle Map Click
 /***************************************************************************************************/
 const handleMapClick = latLng => {
-    if (Object.keys(markerLayerGroup._layers).length > 0) {
-        if ($('#business-info')[0]) {
-            $('#business-info').remove();
-        }
-        removeMarkers();
-    } else {
-        addLocationMarker(latLng);
+    if (clickTimeout) {
+        clearTimeout(clickTimeout);
     }
+    clickCount ++;
+
+    if (clickCount > 1) {
+        clickCount = 0;
+        return;
+    }
+    clickTimeout = setTimeout(() => {
+        if (Object.keys(markerLayerGroup._layers).length > 0) {
+            if ($('#business-info')[0]) {
+                $('#business-info').remove();
+            }
+            removeMarkers();
+        } else {
+            addLocationMarker(latLng);
+        }
+        clickCount = 0;
+    }, 500)
 }
 
 // Create A Location Marker
 /***************************************************************************************************/
-const addLocationMarker = (latLng, html = `<svg xmlns="http://www.w3.org/2000/svg" height="48" width="48" viewbox="0 0 48 48" fill="currentcolor"><path d="M22.65 34h3V22h-3ZM24 18.3q.7 0 1.175-.45.475-.45.475-1.15t-.475-1.2Q24.7 15 24 15q-.7 0-1.175.5-.475.5-.475 1.2t.475 1.15q.475.45 1.175.45ZM24 44q-4.1 0-7.75-1.575-3.65-1.575-6.375-4.3-2.725-2.725-4.3-6.375Q4 28.1 4 23.95q0-4.1 1.575-7.75 1.575-3.65 4.3-6.35 2.725-2.7 6.375-4.275Q19.9 4 24.05 4q4.1 0 7.75 1.575 3.65 1.575 6.35 4.275 2.7 2.7 4.275 6.35Q44 19.85 44 24q0 4.1-1.575 7.75-1.575 3.65-4.275 6.375t-6.35 4.3Q28.15 44 24 44Zm.05-3q7.05 0 12-4.975T41 23.95q0-7.05-4.95-12T24 7q-7.05 0-12.025 4.95Q7 16.9 7 24q0 7.05 4.975 12.025Q16.95 41 24.05 41ZM24 24Z"/></svg>`) => {
-    const icon = L.divIcon({ className: 'pin1 secondary', iconSize: [48, 48], html });
-    const marker = L.marker(latLng, { icon, interactive: true }).addTo(markerLayerGroup);
+const addLocationMarker = (latLng, altIcon) => {
+    // const icon = L.divIcon({ className: 'pin1 secondary', iconSize: [48, 48], html });
+    const icon = L.ExtraMarkers.icon({
+        icon: altIcon || 'fa-info',
+        markerColor: 'green',
+        shape: 'penta',
+        prefix: 'fa'
+    })
+    const marker = L.marker(latLng, { icon, interactive: true, zIndexOffset: 1000 }).addTo(markerLayerGroup);
 
     locationMarkerLatLng = latLng;
 
@@ -850,8 +871,14 @@ const handleRemovedMarker = () => {
 /***************************************************************************************************/
 const getMyLocationMarkers = geo => {
     const latLng = L.latLng(geo.coords.latitude, geo.coords.longitude);
-    const icon = L.divIcon({ className: "pin1", iconSize: [48, 48], html: `<svg xmlns="http://www.w3.org/2000/svg" height="48" width="48" viewBox="0 0 48 48" fill="currentcolor"><path d="M11.1 35.25Q14.25 33.05 17.35 31.875Q20.45 30.7 24 30.7Q27.55 30.7 30.675 31.875Q33.8 33.05 36.95 35.25Q39.15 32.55 40.075 29.8Q41 27.05 41 24Q41 16.75 36.125 11.875Q31.25 7 24 7Q16.75 7 11.875 11.875Q7 16.75 7 24Q7 27.05 7.95 29.8Q8.9 32.55 11.1 35.25ZM24 25.5Q21.1 25.5 19.125 23.525Q17.15 21.55 17.15 18.65Q17.15 15.75 19.125 13.775Q21.1 11.8 24 11.8Q26.9 11.8 28.875 13.775Q30.85 15.75 30.85 18.65Q30.85 21.55 28.875 23.525Q26.9 25.5 24 25.5ZM24 44Q19.9 44 16.25 42.425Q12.6 40.85 9.875 38.125Q7.15 35.4 5.575 31.75Q4 28.1 4 24Q4 19.85 5.575 16.225Q7.15 12.6 9.875 9.875Q12.6 7.15 16.25 5.575Q19.9 4 24 4Q28.15 4 31.775 5.575Q35.4 7.15 38.125 9.875Q40.85 12.6 42.425 16.225Q44 19.85 44 24Q44 28.1 42.425 31.75Q40.85 35.4 38.125 38.125Q35.4 40.85 31.775 42.425Q28.15 44 24 44ZM24 41Q26.75 41 29.375 40.2Q32 39.4 34.55 37.4Q32 35.6 29.35 34.65Q26.7 33.7 24 33.7Q21.3 33.7 18.65 34.65Q16 35.6 13.45 37.4Q16 39.4 18.625 40.2Q21.25 41 24 41ZM24 22.5Q25.7 22.5 26.775 21.425Q27.85 20.35 27.85 18.65Q27.85 16.95 26.775 15.875Q25.7 14.8 24 14.8Q22.3 14.8 21.225 15.875Q20.15 16.95 20.15 18.65Q20.15 20.35 21.225 21.425Q22.3 22.5 24 22.5ZM24 18.65Q24 18.65 24 18.65Q24 18.65 24 18.65Q24 18.65 24 18.65Q24 18.65 24 18.65Q24 18.65 24 18.65Q24 18.65 24 18.65Q24 18.65 24 18.65Q24 18.65 24 18.65ZM24 37.35Q24 37.35 24 37.35Q24 37.35 24 37.35Q24 37.35 24 37.35Q24 37.35 24 37.35Q24 37.35 24 37.35Q24 37.35 24 37.35Q24 37.35 24 37.35Q24 37.35 24 37.35Z"/></svg>` });
-    const marker = L.marker(latLng, { icon });
+    const icon = L.ExtraMarkers.icon({
+        icon: 'fa-user',
+        markerColor: 'blue',
+        shape: 'square',
+        prefix: 'fa'
+    })
+    
+    const marker = L.marker(latLng, { icon, zIndexOffset: 999 });
     const circle = L.circle(latLng, { 
         radius: geo.coords.accuracy,
         color: '#0d6efd',
@@ -981,33 +1008,45 @@ const addIconsToBusiness = business => {
 // Adds a Marker For Each Business In The Business API Response
 /***************************************************************************************************/
 const addBusinessMarkers = data => {
-    if (businessLayerGroup) {
-        businessLayerGroup.clearLayers();
-    } else {
-        businessLayerGroup = L.layerGroup().addTo(map);
-    }
+    businessLayerGroup.clearLayers();
 
+        // const markers = 
     data.businesses.forEach(business => {
         let rating = '';
         const stars = new Array(Math.ceil(business.rating)).fill(`<svg class="star" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-star"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`);
         stars.forEach(star => {
             rating += star;
         })
-        const latLng = L.latLng(business.coordinates.latitude, business.coordinates.longitude);
-        const icon = L.divIcon({ className: `business ${business.icons[0].colour}`, iconSize: [48, 48], html: business.icons[0].img + `<div class="business-data card"><img src="${business.image_url}" alt=""/><div class="card-body"><p class="fs-6 fw-semibold mb-1 lh-1">${business.name}</p><div class="rating mb-1" style="width: ${business.rating * 16}px;">${rating}</div>${business.location.display_address.length > 0 ? [...new Set(business.location.display_address.map(line => `<p class="mb-0">${line}</p>`))].join('') : null}</div></div>`});
-        const marker = L.marker(latLng, { icon, interactive: true }).addTo(businessLayerGroup);
 
+        const latLng = L.latLng(business.coordinates.latitude, business.coordinates.longitude);
+        // const icon = L.divIcon({ className: `business ${business.icons[0].colour}`, iconSize: [48, 48], html: business.icons[0].img + `<div class="business-data card"><img src="${business.image_url}" alt=""/><div class="card-body"><p class="fs-6 fw-semibold mb-1 lh-1">${business.name}</p><div class="rating mb-1" style="width: ${business.rating * 16}px;">${rating}</div>${business.location.display_address.length > 0 ? [...new Set(business.location.display_address.map(line => `<p class="mb-0">${line}</p>`))].join('') : null}</div></div>`});
+        // const marker = L.marker(latLng, { icon, interactive: true }).addTo(businessLayerGroup);
+        const icon = L.ExtraMarkers.icon({
+            icon: business.icons[0].img,
+            markerColor: business.icons[0].colour,
+            shape: 'circle',
+            prefix: 'fa'
+        })
+
+        const marker = L.marker(latLng, { icon }).addTo(businessLayerGroup);
+        
         marker.addEventListener('click', e => {
             if (Object.keys(markerLayerGroup._layers).length > 0) {
                 markerLayerGroup.clearLayers();
             }
-            addLocationMarker(latLng, business.icons[0].img);
+            
+            if ($('#business-info')[0]) {
+                $('#business-info').remove();
+            }
+            // addLocationMarker(latLng, business.icons[0].img);
             if (!moreInfo.hasClass('active')) {
                 toggleMenu();
             }
+            addLocationMarker(latLng, business.icons[0].img)
+
             const showBusinessInfo = (business) => {
                 const businessInfoContainer = $(`<div id="business-info" class="card mb-3"></div>`);
-                const icons = $(`<div class="card-icons">${business.icons.map(icon => `<div class="${icon.colour} border">${icon.img}</div>`).join('')}</div>`);
+                const icons = $(`<div class="card-icons">${business.icons.map(icon => `<div class="${icon.colour} border"><i class="fa-solid ${icon.img}"></i></div>`).join('')}</div>`);
                 const image = $(`<img class="card-img-top" src="${business.image_url}" alt=""/>`);
                 const businessInfoBody = $(`<div class="card-body"></div>`)
                 const name = $(`<h2 class="card-title mb-1">${business.name}</h2>`);
@@ -1356,6 +1395,8 @@ const renderMainElements = () => {
             baseLayers[name].addTo(map);
         }
     })
+    
+    map.addLayer(businessLayerGroup);
 
     // Category Selector
     /***************************************************************************************************/
