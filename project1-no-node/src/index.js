@@ -3,11 +3,11 @@ import './modules/leaflet/leaflet.js';
 import './modules/bootstrap/bootstrap.min.js';
 import K from './modules/kaigen/kaigen.js';
 
-import currencies from './assets/json/currencies.json' assert { type: "json" };
-import geojson from './assets/geojson/countryBorders.geo.json' assert { type: "json" };
-import cats from './assets/json/mainCategories.json' assert { type: "json" };
-import allCats from './assets/json/categories.json' assert { type: "json" };
-import colours from './assets/json/colours.json' assert { type: "json" };
+import currencies from './assets/js/currencies.js';
+import geojson from './assets/geojson/countryBorders.geo.js';
+import cats from './assets/js/mainCategories.js';
+import allCats from './assets/js/categories.js';
+import colours from './assets/js/colours.js';
 
 /***************************************************************************************************/
 // Global Variables
@@ -99,6 +99,8 @@ let baseLayers = {};
 let markerLayerGroup = null;
 let businessLayerGroup = null;
 let location = null;
+let locationMarkerLatLng = null;
+let handleZoomEnd = null;
 let centre = {};
 let found = false;
 let currentCountry = '';
@@ -138,7 +140,6 @@ const zoomIn = $('<button class="btn btn-primary border" type="button" data-bs-t
 const zoomOut = $('<button class="btn btn-light border" type="button" data-bs-toggle="tooltip" title="Zoom Out"></button>');
 
 const moreInfo = $('<button id="more-info" class="btn btn-secondary border round" data-bs-toggle="tooltip" title="More Info"></button>');
-// const navigation = $('<button id="navigation" class="btn btn-secondary border round" data-bs-toggle="tooltip" title="Navigation"></button>');
 const myLocation = $('<button id="my-location" class="btn btn-secondary border round" data-bs-toggle="tooltip" title="My Location"></button>');
 const outline = $('<button id="geolayer" class="btn btn-light border round active" data-bs-toggle="tooltip" title="My Location"></button>');
 const crosshairButton = $('<button id="crosshair-button" class="btn btn-light border round active" data-bs-toggle="tooltip" title="Crosshair"></button>');
@@ -239,10 +240,10 @@ const renderNoLocation = () => {
     const startModalHeader = $(`<div class="modal-header"></div>`);
     const startModalTitle = $(`<h5 class="modal-title">Location Services</h5>`);
     const startModalClose = $(`<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>`);
-    const startModalBody = $(`<div class="modal-body"><p>You didn't enable your location services or they're not available on your device. We aim to tailor your experience based on your location.</p><p class="mb-0">If you want the best experience enable your location and click below. If not, feel free to XPlore!</p></div>`);
+    const startModalBody = $(`<div class="modal-body"><p>You didn't enable your location services or they're not available on your device. We aim to tailor your experience based on your location.</p><p class="mb-0">If you want the best experience enable your location and click below or refresh your page. If not, feel free to XPlore!</p></div>`);
     const startModalFooter = $(`<div class="modal-footer"></div>`);
     const startCancel = $(`<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>`);
-    const startLocating = $(`<button type="button" class="btn btn-primary"><svg xmlns="http://www.w3.org/2000/svg" height="48" width="48" viewbox="0 0 48 48" fill="currentcolor"><path d="M22.5 46V42.25Q15.65 41.55 11.1 37Q6.55 32.45 5.85 25.6H2.1V22.6H5.85Q6.55 15.75 11.1 11.2Q15.65 6.65 22.5 5.95V2.2H25.5V5.95Q32.35 6.65 36.9 11.2Q41.45 15.75 42.15 22.6H45.9V25.6H42.15Q41.45 32.45 36.9 37Q32.35 41.55 25.5 42.25V46ZM24 39.3Q30.25 39.3 34.725 34.825Q39.2 30.35 39.2 24.1Q39.2 17.85 34.725 13.375Q30.25 8.9 24 8.9Q17.75 8.9 13.275 13.375Q8.8 17.85 8.8 24.1Q8.8 30.35 13.275 34.825Q17.75 39.3 24 39.3Z"/></svg></button>`);
+    const refresh = $(`<button type="button" class="btn btn-primary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-refresh-cw"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg></button>`);
 
     root.append(startModal);
     startModal.append(startModalDialog);
@@ -250,16 +251,15 @@ const renderNoLocation = () => {
 
     startModalContent.append(startModalHeader, startModalBody, startModalFooter);
     startModalHeader.append(startModalTitle, startModalClose);
-    startModalFooter.append(startCancel, startLocating);
+    startModalFooter.append(startCancel, refresh);
 
     const startModalControl = new bootstrap.Modal(startModal[0]);
     startModalControl.show();
     
     getCurrentLocation();
 
-    startLocating.on('click', e => {
-        goToMyLocation(map);
-        startModalControl.hide();
+    refresh.on('click', e => {
+        window.location.reload();
     })
 }
 
@@ -286,6 +286,11 @@ const renderCategorySelector = () => {
             button.toggleClass('active');
             if (button.hasClass('active')) {
                 selectedCategories.push(category.alias);
+                if (map.getZoom() <= 10) {
+                    const latLng = locationMarkerLatLng ? locationMarkerLatLng : map.getCenter();
+                    const bounds = latLng.toBounds(40000);
+                    map.flyToBounds(bounds);
+                }
             } else {
                 selectedCategories = selectedCategories.filter(cat => cat !== category.alias);
             }
@@ -552,9 +557,9 @@ const renderResults = (res, map) => {
                 if (Object.keys(markerLayerGroup._layers).length > 0) {
                     markerLayerGroup.clearLayers();
                 }
-                addLocationMarker(latLng)
+                addLocationMarker(latLng);
                 getCurrentAddress(lat, lng, data => {
-                    renderToast({name: 'XPlore', src: logo, text: `Moving to ${data.results[0].formatted}.`});
+                    renderToast({name: 'XPlore', src: './src/assets/images/logo192.png', text: `Moving to ${data.results[0].formatted}.`});
                 })
                 goToLocation(latLng, latLngBounds);
             })
@@ -566,7 +571,8 @@ const renderResults = (res, map) => {
         // Highlist the first tab element
         const listElement = $('#result-list .list-group-item');
         bootstrap.Tab.getInstance(listElement[0]).show();
-
+        console.log(listElement)
+        
         // Assign the mouseover event for each tab
         listElement.each(i => {
             const element = listElement[i];
@@ -787,20 +793,24 @@ const addLocationMarker = (latLng, html = `<svg xmlns="http://www.w3.org/2000/sv
     const icon = L.divIcon({ className: 'pin1 secondary', iconSize: [48, 48], html });
     const marker = L.marker(latLng, { icon, interactive: true }).addTo(markerLayerGroup);
 
+    locationMarkerLatLng = latLng;
+
+    handleZoomEnd = () => {
+        if (moveTimeout) {
+            clearTimeout(moveTimeout);
+        }
+    
+        moveTimeout = setTimeout(() => {
+            getCurrentLocation(latLng);
+        }, 1000);
+    };
+
     if ($('#business-info')[0]) {
         $('#business-info').remove();
     }
 
     if (Object.keys(markerLayerGroup._layers).length === 1) {
-        map.addEventListener('zoomend', () => {
-            if (moveTimeout) {
-                clearTimeout(moveTimeout);
-            }
-        
-            moveTimeout = setTimeout(() => {
-                getCurrentLocation(latLng);
-            }, 1000);
-        });
+        map.addEventListener('zoomend', handleZoomEnd);
     }
 
     marker.clickCount = 0;
@@ -829,8 +839,9 @@ const removeMarkers = () => {
 const handleRemovedMarker = () => {
     if (Object.keys(markerLayerGroup._layers).length === 0) {
         getCurrentLocation();
+        locationMarkerLatLng = null;
         crosshair.fadeIn();
-        map.removeEventListener('zoomend', () => getCurrentLocation(latLng));
+        map.removeEventListener('zoomend', handleZoomEnd);
         map.addEventListener('moveend', handleMapMoveEnd);
     }
 }
@@ -852,63 +863,65 @@ const getMyLocationMarkers = geo => {
 
 // Create Marker & Circle For My Location
 /***************************************************************************************************/
-const goToMyLocation =()=> {
-    const geolocation = navigator.geolocation;
-    geolocation.getCurrentPosition(res => {
-        location = getMyLocationMarkers(res);
-        getCurrentAddress(res.coords.latitude, res.coords.longitude, data => {
-            location = {
-                ...location,
-                data: data.results[0]
-            }
-            getCountryData(location.data.country_code, false, data => {
+const goToMyLocation = () => {
+    const handleZoomEnd = () => {
+        // Change the my location icon to found
+        myLocationFound();
+        map.removeEventListener('zoomend', handleZoomEnd);
+    }
+
+    if ((!location || !location.latLngBounds) && !found) {
+        const geolocation = navigator.geolocation;
+        geolocation.getCurrentPosition(res => {
+            location = getMyLocationMarkers(res);
+
+            // Save a reference to my location layer
+            location.layer = L.layerGroup([location.circle, location.marker]).addTo(map);
+
+            getCurrentAddress(res.coords.latitude, res.coords.longitude, data => {
                 location = {
                     ...location,
-                    country: data
+                    data: data.results[0]
                 }
-            })
-        })
 
+                // If the location has not already been found 
+                // while the app has been open add a circle, add a marker, create a found location toast
+                renderToast({
+                    name: 'XPlore',
+                    src: './src/assets/images/logo192.png', text: `Hey! We think we've found your location within ${Math.round(res.coords.accuracy)}m of ${location.data.formatted}.`
+                });
+
+                getCountryData(location.data.country_code, false, data => {
+                    location = {
+                        ...location,
+                        country: data
+                    }
+                })
+            })
+            
+            found = true;
+            
+            // Fly to location bounds
+            map.flyToBounds(location.latLngBounds);
+
+            // Event listener for when the flyto animation finishes
+            map.addEventListener('zoomend', handleZoomEnd);
+        }, err => {
+            // If it fails bring up a modal to get the users country
+            renderNoLocation();
+        });
+    } else {
         // Fly to location bounds
         map.flyToBounds(location.latLngBounds);
 
-        const handleZoomEnd = () => {
-            if (location && !found) {
-                // If the location has not already been found 
-                // while the app has been open add a circle, add a marker, create a found location toast
-                const { latitude: lat, longitude: lng } = res.coords;
-                location.circle.addTo(map);
-                location.marker.addTo(map);
-                getCurrentAddress(lat, lng, data => {
-                    renderToast({
-                        name: 'XPlore',
-                        src: './src/assets/images/logo192.png', text: `Hey! We think we've found your location within ${Math.round(res.coords.accuracy)}m of ${data.results[0].formatted}.`
-                    });
-                })
-                found = true;
-            }
-
-            // Change the my location icon to found
-            myLocationFound();
-
-            map.removeEventListener('zoomend', handleZoomEnd);
-        }
-
         // Event listener for when the flyto animation finishes
         map.addEventListener('zoomend', handleZoomEnd);
-    }, err => {
-        // If it fails bring up a modal to get the users country
-        renderNoLocation();
-    });
+    }
 }
 
 // Go To Selected Location
 /***************************************************************************************************/
 const goToLocation = (latLng, latLngBounds) => {
-    // Add marker
-    // const marker = L.marker(latLng);
-    // marker.addTo(map);
-
     // Go to location
     map.flyToBounds(latLngBounds);
 }
@@ -1127,10 +1140,10 @@ const getWeather = async (lat, lng, cb) => {
 // Get News
 /***************************************************************************************************/
 const getNews = async (country, cb) => {
-    const res = await pajax({
-        url: backendHost + '/api/news.php',
-        type: 'GET', dataType: 'json', data: { country }
-    })
+    // const res = await pajax({
+    //     url: backendHost + '/api/news.php',
+    //     type: 'GET', dataType: 'json', data: { country }
+    // })
     if (cb) { cb(res.data) };
     return res;
 }
@@ -1170,7 +1183,7 @@ const autocompleteAddresses = data => {
         type: 'GET',
         dataType: 'json',
         data,
-        success: (res) => renderResults(res.data.features || [], res.data.query || {}),
+        success: (res) => renderResults(res.data.features ? res.data.features : [], res.data.query ? res.data.query : {}),
         error: handleAJAXErrors
     })
 }
@@ -1181,7 +1194,7 @@ const getBusinesses = async (latLng, { categories = '', q = '' } = {}, cb) => {
     const { lat, lng } = latLng;
     const northEast = map.getBounds().getNorthEast();
     let radius = Math.round(northEast.distanceTo(latLng));
-    radius = radius > 40000 && radius < 50000 ? 40000 : radius
+    radius = radius > 40000 ? 40000 : radius
     const res = radius <= 40000 ? await pajax({
         url: backendHost + '/api/business_search.php',
         type: 'GET',
@@ -1297,9 +1310,7 @@ const renderMainElements = () => {
 
     // Control Interface Containers
     /***************************************************************************************************/
-    [loader, crosshair, topControls, bottomLeftControls, bottomRightControls].forEach(container => {
-        root.append(container);
-    })
+    root.append(loader, crosshair, topControls, bottomLeftControls, bottomRightControls);
     topControls.append(topLeftControls, topRightControls);
 
     // Create a Leaflet Map and Add Event Listeners
@@ -1323,15 +1334,6 @@ const renderMainElements = () => {
     // Map # Show The My Location Left Icon
     map.addEventListener('move', e => {
         myLocationLeft();
-    })
-
-    // Map # Add Or Remove The Category Selector At The Top
-    map.addEventListener('zoomend', e => {
-        if (map.getZoom() > 10 && categoryContainer.hasClass('hidden')) {
-            categoryContainer.removeClass('hidden')
-        } else if (map.getZoom() <= 10 && !categoryContainer.hasClass('hidden')) {
-            categoryContainer.addClass('hidden')
-        }
     })
     
     // Map # Get Current/Selected Location Data After Moving (If it has moved more than once within a second, cancel the initial call)
@@ -1579,16 +1581,12 @@ countrySelect.on('change', e => {
             removeMarkers();
         }
 
+        addLocationMarker(L.latLng((north + south) / 2, (east + west) / 2));
+
         map.flyToBounds(L.latLngBounds(corner1, corner2));
         if (outline.hasClass('active')) {
             showGeoLayer(e.target.value);
         }
-
-        centre.country = data;
-        renderCountryData(data);
-        getExchangeRates(data.currencyCode, data => {
-            renderExchangeRates(data)
-        })
     })
 })
 

@@ -346,8 +346,9 @@ div#search-results button {
     font-size: .7rem;
 }
 
-button.list-group-item.active {
+button.list-group-item:hover {
     color: #fff !important;
+    background-color: var(--bs-primary) !important;
 }
 
 @media screen and (max-width: 440px) {
@@ -631,7 +632,7 @@ div#more-info-menu #business-info h2 {
 
 div#more-info-menu #business-info .card-icons {
     position: absolute;
-    top: 0;
+    bottom: 0;
     right: 0;
     display: flex;
     margin: 8px;
