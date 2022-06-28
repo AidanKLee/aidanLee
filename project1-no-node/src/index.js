@@ -1140,10 +1140,10 @@ const getWeather = async (lat, lng, cb) => {
 // Get News
 /***************************************************************************************************/
 const getNews = async (country, cb) => {
-    // const res = await pajax({
-    //     url: backendHost + '/api/news.php',
-    //     type: 'GET', dataType: 'json', data: { country }
-    // })
+    const res = await pajax({
+        url: backendHost + '/api/news.php',
+        type: 'GET', dataType: 'json', data: { country }
+    })
     if (cb) { cb(res.data) };
     return res;
 }
