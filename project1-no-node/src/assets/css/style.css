@@ -17,6 +17,15 @@
     padding: 0;
 }
 
+.flag {
+    height: 32px;
+    width: auto;
+}
+
+sup {
+    padding: 0 !important;
+}
+
 .shadows {
     filter: drop-shadow(2px 2px 2px rgba(0,0,0,.4));
 }
@@ -39,6 +48,31 @@
 
 .modal-header, .modal-body, .modal-footer {
     padding: 1rem;
+}
+
+.leaflet-tooltip {
+    border-radius: 8px;
+    text-align: center;
+    max-width: calc(100vw - 2rem);
+    margin: 1rem;
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,.2));
+}
+
+.leaflet-tooltip p {
+    line-height: 1;
+}
+
+svg.inline {
+    height: 16px;
+    width: 16px;
+}
+
+.carousel-indicators .active {
+    outline: 0 none transparent !important;
+}
+
+.table-hover tr:hover {
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
 /* ######################################################### */

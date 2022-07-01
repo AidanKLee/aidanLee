@@ -7,16 +7,16 @@ export default [
         "country_blacklist": [],
         "icon": "fa-person-walking",
     },
-    {
-        "alias": "airports",
-        "title": "Airports",
-        "parent_aliases": [
-            "hotelstravel"
-        ],
-        "country_whitelist": [],
-        "country_blacklist": [],
-        "icon": "fa-plane"
-    },
+    // {
+    //     "alias": "airports",
+    //     "title": "Airports",
+    //     "parent_aliases": [
+    //         "hotelstravel"
+    //     ],
+    //     "country_whitelist": [],
+    //     "country_blacklist": [],
+    //     "icon": "fa-plane"
+    // },
     {
         "alias": "arts",
         "title": "Arts & Entertainment",
@@ -142,7 +142,7 @@ export default [
         "parent_aliases": [],
         "country_whitelist": [],
         "country_blacklist": [],
-        "icon": "fa-apple-whole"
+        "icon": "fa-bread-slice"
     },
     {
         "alias": "gyms",
@@ -222,7 +222,7 @@ export default [
         "parent_aliases": [],
         "country_whitelist": [],
         "country_blacklist": [],
-        "icon": "fa-solid-wrench"
+        "icon": "fa-wrench"
     },
     {
         "alias": "marinas",

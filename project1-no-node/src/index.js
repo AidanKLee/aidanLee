@@ -134,14 +134,14 @@ const bottomRightControls = $('<div class="controls bottom-right"></div>');
 const topLeftControls = $('<div class="left"></div>');
 const topRightControls = $('<div class="right"></div>');
 
-const zoomControls = $('<div id="zoom-control" class="btn-group-vertical shadows"></div>');
+const zoomControls = $('<div id="zoom-control" class="btn-group-vertical shadows-light"></div>');
 const zoomIn = $('<button class="btn btn-primary border" type="button" data-bs-toggle="tooltip" title="Zoom In"></button>');
 const zoomOut = $('<button class="btn btn-light border" type="button" data-bs-toggle="tooltip" title="Zoom Out"></button>');
 
-const moreInfo = $('<button id="more-info" class="btn btn-secondary border round" data-bs-toggle="tooltip" title="More Info"></button>');
-const myLocation = $('<button id="my-location" class="btn btn-secondary border round" data-bs-toggle="tooltip" title="My Location"></button>');
+const moreInfo = $('<button id="more-info" class="btn btn-secondary border mb-0" data-bs-toggle="tooltip" title="More Info"></button>');
+const myLocation = $('<button id="my-location" class="btn btn-secondary border round shadows-light" data-bs-toggle="tooltip" title="My Location"></button>');
 const outline = $('<button id="geolayer" class="btn btn-light border round active" data-bs-toggle="tooltip" title="My Location"></button>');
-const crosshairButton = $('<button id="crosshair-button" class="btn btn-light border round active" data-bs-toggle="tooltip" title="Crosshair"></button>');
+const crosshairButton = $('<button id="crosshair-button" class="btn btn-light border round active shadows" data-bs-toggle="tooltip" title="Crosshair"></button>');
 
 const baseLayerControl = $('<div id="base-layer-control"></div>');
 const baseLayerControlDropdown = $('<div class="collapse"></div>');
@@ -153,12 +153,8 @@ const collapse = new bootstrap.Collapse(baseLayerControlDropdown, {
 /***************************************************************************************************/
 const searchBarContainer = $('<div id="search-bar-container" class="mb-2 rounded-pill"></div>')
 const searchBar = $('<div id="search-bar" class="input-group shadows"></div>');
-const searchResults = $('<div id="search-results" class="shadows-light"></div>');
-const resultsCollapse = new bootstrap.Collapse(searchResults);
-const resultList = $('<div id="result-list" class="list-group"></div>');
-const input = $('<input id="q" type="text" class="form-control" placeholder="Go XPlore" aria-label="Search" autocomplete="off">');
 const countrySelect = $(`<select id="country" class="form-select" aria-label=" aria-label="Country Select"></select>`);
-const searchLabel = $('<label for="q" class="btn btn-light border" data-bs-toggle="tooltip" title="Search"></label>');
+const searchLabel = $('<label for="country" class="btn btn-light border" data-bs-toggle="tooltip" title="Search"></label>');
 const maximize = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-maximize"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>';
 const minmize = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-minimize"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path></svg>';
 const fullscreenButton = $('<button class="btn btn-secondary" type="button" data-bs-toggle="tooltip" title="Full Screen"></button>');
@@ -197,17 +193,18 @@ const infoBody = $('<div class="modal-body"></div>');
 const addressList = $(`<h2 class="modal-title mb-0 fs-5">Address</h2>`);
 const formattedAddress = $(`<p></p>`); 
 const countryState = $(`<h2 class="modal-title mb-0 fs-4"></h2>`);
-const continent = $(`<p class="mb-0"></p>`);
-const capital = $(`<p class="mb-0"></p>`);
-const population = $(`<p class="mb-0"></p>`);
-const areaSqKm = $(`<p></p>`);
+const countryInfo = $(`<table class="table table-striped table-hover"></table>`);
+const continent = $(`<tr></tr>`);
+const capital = $(`<tr></tr>`);
+const population = $(`<tr></tr>`);
+const areaSqKm = $(`<tr></tr>`);
 const menuWeather = $(`<div class="weather d-flex border mb-3"></div>`);
 const newsArticles = $(`<div class="news"></div>`)
 const currencyList = $(`<div class="currency mb-3"></div>`);
 const wikis = $(`<div class="wiki"></div>`);
 
 const infoFooter = $('<div class="modal-footer d-block"></div>');
-const powered = $(`<p class="fw-bold text-center">Powered By</p>`);
+const powered = $(`<p class="fw-bold text-center mb-2">Powered By</p>`);
 const attrib = $(`<div id="attribution" class ="d-flex justify-content-center"></div>`);
 
 // Prevent Double Clicks From Adding A Marker
@@ -292,7 +289,7 @@ const renderCategorySelector = () => {
                 if (map.getZoom() <= 10) {
                     const latLng = locationMarkerLatLng ? locationMarkerLatLng : map.getCenter();
                     const bounds = latLng.toBounds(40000);
-                    map.flyToBounds(bounds);
+                    map.fitBounds(bounds);
                 }
             } else {
                 selectedCategories = selectedCategories.filter(cat => cat !== category.alias);
@@ -433,10 +430,10 @@ const renderMenuAddress = data => {
 // More Info Menu - Country Data
 /***************************************************************************************************/
 const renderCountryData = data => {
-    continent.html(`<span class="fw-bolder">Continent: </span>${data.continentName}`);
-    capital.html(`<span class="fw-bolder">Capital City: </span>${data.capital}`);
-    population.html(`<span class="fw-bolder">Population: </span>${formatBigInt(data.population)}`);
-    areaSqKm.html(`<span class="fw-bolder">Land Area: </span>${formatBigInt(Math.round(data.areaInSqKm))} km<sup>2</sup>`);
+    continent.html(`<th class="fw-semibold p-2">Continent</th><td class="text-end p-2">${data.continentName}</td>`);
+    capital.html(`<th class="fw-semibold p-2">Capital City</th><td class="text-end p-2">${data.capital}</td>`);
+    population.html(`<th class="fw-semibold p-2">Population</th><td class="text-end p-2">${formatBigInt(data.population)}</td>`);
+    areaSqKm.html(`<th class="fw-semibold p-2">Land Area</th><td class="text-end p-2">${formatBigInt(Math.round(data.areaInSqKm))} km<sup>2</sup></td>`);
 }
 
 // More Info Menu - News Articles
@@ -534,65 +531,10 @@ const renderBaseLayerControls = (elements, rerender) => {
     collapse.hide()
 }
 
-// Search Bar Results
-/***************************************************************************************************/
-const renderResults = (res, map) => {
-    resultList.empty();
-    if (res.length > 0) {
-        res.forEach(result => {
-            // Extract geolocation data from the response
-            const latLng = L.latLng(result.properties.lat, result.properties.lon);
-            const corner1 = L.latLng(result.bbox[1], result.bbox[0]);
-            const corner2 = L.latLng(result.bbox[3], result.bbox[2]);
-            const latLngBounds = L.latLngBounds(corner1, corner2);
-            const text = result.properties.formatted;
-
-            // Create a list item make it a BootStap tab item and append it to the list
-            const resultElement = $(`<button class="list-group-item list-group-item-action"></button>`);
-            const resultTab = new bootstrap.Tab(resultElement);
-
-            resultElement.html(text);
-            resultList.append(resultElement);
-
-            // On list item click, go to location
-            resultElement.on('click', e => {
-                const { lat, lng } = latLng;
-                if (Object.keys(markerLayerGroup._layers).length > 0) {
-                    markerLayerGroup.clearLayers();
-                }
-                addLocationMarker(latLng);
-                getCurrentAddress(lat, lng, data => {
-                    renderToast({name: 'XPlore', src: './src/assets/images/logo192.png', text: `Moving to ${data.results[0].formatted}.`});
-                })
-                goToLocation(latLng, latLngBounds);
-            })
-        })
-
-        // Append the list to the results container
-        searchResults.append(resultList);
-
-        // Highlist the first tab element
-        const listElement = $('#result-list .list-group-item');
-        bootstrap.Tab.getInstance(listElement[0]).show();
-        console.log(listElement)
-        
-        // Assign the mouseover event for each tab
-        listElement.each(i => {
-            const element = listElement[i];
-            element.addEventListener('mouseover', e => {
-                bootstrap.Tab.getInstance(element).show();
-            })
-        })
-
-        // Open the result container
-        resultsCollapse.show();
-    }
-}
-
 // Notification Toast Element
 /***************************************************************************************************/
 const renderToast = (options = {}) => {
-    const { name = '', src = '', text = '' } = options;
+    const { name = '', src = '', text = '', delay } = options;
 
     let time = 0;
     let timer = null;
@@ -606,7 +548,7 @@ const renderToast = (options = {}) => {
     
     // Create bootsrap toast element
     const toast = new bootstrap.Toast(toastElement[0], {
-        delay: 60000
+        delay: 12000
     });
 
     // Assign close method
@@ -722,7 +664,7 @@ const toggleMenu = () => {
 
 // Show GeoJSON Layer
 /***************************************************************************************************/
-const showGeoLayer = (country) => {
+const showGeoLayer = (country, data) => {
     if (country) {
         const feature = geojson.features.filter(feature => feature.properties.iso_a2.toLowerCase() === country.toLowerCase());
 
@@ -731,9 +673,19 @@ const showGeoLayer = (country) => {
         }
 
         geoLayer = L.geoJSON(feature, {
-            fillOpacity: 0,
-            color: 'var(--bs-primary)'
-        }).addTo(map);
+            dashArray: '8,8',
+            fillOpacity: .1,
+            fillColor: 'var(--bs-secondary)',
+            color: 'var(--bs-secondary)'
+        })
+
+        geoLayer.bindTooltip(`<img class="flag mb-1" src="https://countryflagsapi.com/svg/${country.toLowerCase()}" alt=""/><p class="mb-0 fw-semibold lh-1">${data.countryName}</p><p class="mb-0 lh-1">${formatBigInt(data.population)} residents</p>`, {
+            sticky: true,
+            direction: 'bottom',
+            offset: L.point(-12, 16)
+        })
+
+        geoLayer.addTo(map);
     }
 }
 
@@ -750,7 +702,7 @@ const toggleGeoLayer =()=> {
     if (geoLayer) {
         hideGeoLayer(map);
     } else {
-        showGeoLayer(currentCountry);
+        showGeoLayer(currentCountry, centre.country);
     }
 }
 
@@ -807,12 +759,17 @@ const handleMapClick = latLng => {
 const addLocationMarker = (latLng, altIcon) => {
     // const icon = L.divIcon({ className: 'pin1 secondary', iconSize: [48, 48], html });
     const icon = L.ExtraMarkers.icon({
-        icon: altIcon || 'fa-info',
+        icon: altIcon || 'fa-circle',
         markerColor: 'green',
         shape: 'penta',
         prefix: 'fa'
     })
+
     const marker = L.marker(latLng, { icon, interactive: true, zIndexOffset: 1000 }).addTo(markerLayerGroup);
+
+    if (window.innerWidth > 1280 && !moreInfo.hasClass('active')) {
+        toggleMenu();
+    }
 
     locationMarkerLatLng = latLng;
 
@@ -820,9 +777,9 @@ const addLocationMarker = (latLng, altIcon) => {
         if (moveTimeout) {
             clearTimeout(moveTimeout);
         }
-    
+        // console.log('zoomend')
         moveTimeout = setTimeout(() => {
-            getCurrentLocation(latLng);
+            getCurrentLocation(latLng, marker);
         }, 1000);
     };
 
@@ -830,12 +787,14 @@ const addLocationMarker = (latLng, altIcon) => {
         $('#business-info').remove();
     }
 
-    if (Object.keys(markerLayerGroup._layers).length === 1) {
-        map.addEventListener('zoomend', handleZoomEnd);
-    }
+    setTimeout(() => {
+        if (Object.keys(markerLayerGroup._layers).length === 1) {
+            map.addEventListener('zoomend', handleZoomEnd);
+        }
+    }, 1000)
 
     marker.clickCount = 0;
-    getCurrentLocation(latLng);
+    getCurrentLocation(latLng, marker);
     crosshair.fadeOut();
 
     marker.addEventListener('click', e => {
@@ -869,7 +828,7 @@ const handleRemovedMarker = () => {
 
 // Create Marker & Circle For My Location
 /***************************************************************************************************/
-const getMyLocationMarkers = geo => {
+const getMyLocationMarkers = (geo, country) => {
     const latLng = L.latLng(geo.coords.latitude, geo.coords.longitude);
     const icon = L.ExtraMarkers.icon({
         icon: 'fa-user',
@@ -879,78 +838,70 @@ const getMyLocationMarkers = geo => {
     })
     
     const marker = L.marker(latLng, { icon, zIndexOffset: 999 });
-    const circle = L.circle(latLng, { 
-        radius: geo.coords.accuracy,
-        color: '#0d6efd',
-        fillOpacity: .08
-    });
+    marker.bindTooltip(`<p class="mb-0">You're in ${prependTheToCountry(country.countryName)}</p>`, {
+        direction: 'bottom',
+    }).openTooltip();
+    
+    
     const latLngBounds = latLng.toBounds(geo.coords.accuracy);
-    return { latLng, marker, circle, latLngBounds };
+    return { latLng, marker, /*circle,*/ latLngBounds };
 }
 
 // Create Marker & Circle For My Location
 /***************************************************************************************************/
 const goToMyLocation = () => {
-    const handleZoomEnd = () => {
+    const handleStartZoomEnd = () => {
         // Change the my location icon to found
         myLocationFound();
-        map.removeEventListener('zoomend', handleZoomEnd);
+        map.removeEventListener('moveend', handleStartZoomEnd);
     }
 
     if ((!location || !location.latLngBounds) && !found) {
         const geolocation = navigator.geolocation;
         geolocation.getCurrentPosition(res => {
-            location = getMyLocationMarkers(res);
-
             // Save a reference to my location layer
-            location.layer = L.layerGroup([location.circle, location.marker]).addTo(map);
-
+            
             getCurrentAddress(res.coords.latitude, res.coords.longitude, data => {
                 location = {
                     ...location,
                     data: data.results[0]
                 }
 
-                // If the location has not already been found 
-                // while the app has been open add a circle, add a marker, create a found location toast
-                renderToast({
-                    name: 'XPlore',
-                    src: './src/assets/images/logo192.png', text: `Hey! We think we've found your location within ${Math.round(res.coords.accuracy)}m of ${location.data.formatted}.`
-                });
-
                 getCountryData(location.data.country_code, false, data => {
                     location = {
                         ...location,
                         country: data
                     }
+
+                    location = {...location, ...getMyLocationMarkers(res, data)};
+                    location.layer = L.layerGroup([/*location.circle,*/ location.marker]).addTo(map);
+                    
+                    // Fly to location bounds
+                    map.fitBounds([
+                        [data.north, data.east],
+                        [data.south, data.west]
+                    ]);
                 })
             })
             
             found = true;
-            
-            // Fly to location bounds
-            map.flyToBounds(location.latLngBounds);
 
             // Event listener for when the flyto animation finishes
-            map.addEventListener('zoomend', handleZoomEnd);
+            map.addEventListener('moveend', handleStartZoomEnd);
         }, err => {
             // If it fails bring up a modal to get the users country
             renderNoLocation();
         });
     } else {
         // Fly to location bounds
-        map.flyToBounds(location.latLngBounds);
-
+        const data = location.country;
+        map.fitBounds([
+            [data.north, data.east],
+            [data.south, data.west]
+        ]);
         // Event listener for when the flyto animation finishes
-        map.addEventListener('zoomend', handleZoomEnd);
+        map.addEventListener('moveend', handleStartZoomEnd);
     }
-}
-
-// Go To Selected Location
-/***************************************************************************************************/
-const goToLocation = (latLng, latLngBounds) => {
-    // Go to location
-    map.flyToBounds(latLngBounds);
 }
 
 // Convert USD To Current/Selected Countries Exchange Rates
@@ -1019,8 +970,6 @@ const addBusinessMarkers = data => {
         })
 
         const latLng = L.latLng(business.coordinates.latitude, business.coordinates.longitude);
-        // const icon = L.divIcon({ className: `business ${business.icons[0].colour}`, iconSize: [48, 48], html: business.icons[0].img + `<div class="business-data card"><img src="${business.image_url}" alt=""/><div class="card-body"><p class="fs-6 fw-semibold mb-1 lh-1">${business.name}</p><div class="rating mb-1" style="width: ${business.rating * 16}px;">${rating}</div>${business.location.display_address.length > 0 ? [...new Set(business.location.display_address.map(line => `<p class="mb-0">${line}</p>`))].join('') : null}</div></div>`});
-        // const marker = L.marker(latLng, { icon, interactive: true }).addTo(businessLayerGroup);
         const icon = L.ExtraMarkers.icon({
             icon: business.icons[0].img,
             markerColor: business.icons[0].colour,
@@ -1145,9 +1094,39 @@ const getCountryData = async (country, isCentre, cb) => {
             url: `${backendHost}/api/country_info.php`,
             type: 'POST', dataType: 'json', data: { country }
         });
+
         if (cb) { cb(res.data[0]) };
         return res.data[0];
     }
+}
+
+// Get Cities Data
+/***************************************************************************************************/
+const getCitiesData = async (country, areaInSqKm, cb) => {
+
+    let limit = areaInSqKm ? Math.ceil(areaInSqKm / 7500) : 100
+    limit = limit > 999 ? 999 : limit;
+
+    const res = await pajax({
+        url: `${backendHost}/api/cities.php`,
+        type: 'POST', dataType: 'json', data: { country, limit }
+    });
+
+    if (cb) { cb(res.data) };
+    return res.data[0];
+}
+
+// Get Airports
+/***************************************************************************************************/
+const getAirports = async (country, areaInSqKm, cb) => {
+    let limit = areaInSqKm ? Math.ceil(areaInSqKm / 10000) : 100
+    limit = limit > 200 ? 200 : limit;
+    const res = await pajax({
+        url: `${backendHost}/api/airports.php`,
+        type: 'POST', dataType: 'json', data: { country, limit }
+    });
+    if (cb) { cb(res.data) };
+    return res.data[0];
 }
 
 // Get Exchange Rates
@@ -1268,39 +1247,129 @@ const getEarthquakes = async (data, cb) => {
     return res.data.earthquakes;
 }
 
+const prependTheToCountry = name => {
+    if (name.slice(0,6).toLowerCase() === 'united') {
+        name = `the ${name}`;
+    }
+    return name;
+}
+
+const cityLayerGroup = L.markerClusterGroup({
+    maxClusterRadius: 36
+});
+
+const airportLayerGroup = L.markerClusterGroup({
+    maxClusterRadius: 36
+});
+
+const addCityMarkers = cities => {
+    cityLayerGroup.clearLayers();
+
+    cities.forEach(city => {
+        const icon = L.ExtraMarkers.icon({
+            icon: 'fa-city',
+            markerColor: 'red',
+            shape: 'circle',
+            prefix: 'fa'
+        })
+
+        const marker = L.marker(L.latLng(city.lat, city.lng), { icon }).addTo(cityLayerGroup);
+        
+        marker.bindTooltip(`<p class="mb-0 fw-semibold">${city.name}</p><p class=mb-0>${city.fcodeName.slice(0,1).toUpperCase() + city.fcodeName.slice(1)}</p><p class=mb-0>${formatBigInt(city.population)} residents</p>`, {
+            direction: 'bottom',
+            offset: L.point(-16, -8)
+        })
+
+        marker.addEventListener('click', e => {
+            if (Object.keys(markerLayerGroup._layers).length > 0) {
+                markerLayerGroup.clearLayers();
+            }
+            
+            addLocationMarker(L.latLng(city.lat, city.lng))
+        })
+    })
+}
+
+
+
+const addAirportMarkers = airports => {
+
+    airports.forEach(airport => {
+        const icon = L.ExtraMarkers.icon({
+            icon: 'fa-plane',
+            markerColor: 'pink',
+            shape: 'circle',
+            prefix: 'fa'
+        })
+
+        const marker = L.marker(L.latLng(airport.lat, airport.lng), { icon }).addTo(cityLayerGroup);
+        
+        marker.bindTooltip(`<p class="mb-0 fw-semibold">${airport.name}</p>`, {
+            direction: 'bottom',
+            offset: L.point(-16, -8)
+        })
+
+        marker.addEventListener('click', e => {
+            if (Object.keys(markerLayerGroup._layers).length > 0) {
+                markerLayerGroup.clearLayers();
+            }
+            
+            addLocationMarker(L.latLng(airport.lat, airport.lng))
+        })
+    })
+}
+
 // Get Current Location # Calls the api's to get data for the "more-info-menu"
 /***************************************************************************************************/
-const getCurrentLocation = latLng => {
+const getCurrentLocation = (latLng, marker) => {
     AJAXQueue.forEach(request => {
         request.abort();
     })
-
+    console.log('getting current location')
     latLng = latLng ? latLng : map.getCenter();
 
     const { lat, lng } = latLng;
 
     getCurrentAddress(lat, lng, data => {
+        const countryCode = data.results[0].country_code;
         centre.data = data.results[0];
         renderAlertAddress(data);
         renderMenuAddress(data.results[0]);
-        if (data.results[0].country_code && currentCountry.toLowerCase() !== data.results[0].country_code) {
-            getNews(data.results[0].country_code, data => {
+        if (countryCode && currentCountry.toLowerCase() !== countryCode) {
+            getNews(countryCode, data => {
                 renderNews(data.articles)
             })
-            countrySelect.val(data.results[0].country_code.toUpperCase())
-            if (outline.hasClass('active')) {
-                showGeoLayer(data.results[0].country_code);
-            }
+            countrySelect.val(countryCode.toUpperCase())
         }
-        getCountryData(data.results[0].country_code, true, data => {
-            const { countryName: country, north, south, east, west } = data;
+        if (marker) {
+            marker.bindTooltip(`<p class="mb-0 fw-bolder">${data.results[0].formatted}</p>Click the <svg class="inline" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-info"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> button to learn more about this location.`, {
+                direction: 'bottom',
+            }).openTooltip();
+        }
+
+        getCountryData(countryCode, true, data => {
+            const { areaInSqKm, countryName: country, north, south, east, west } = data;
+
+            getCitiesData(countryCode, areaInSqKm, data => {
+                addCityMarkers(data);
+
+                getAirports(countryCode, areaInSqKm, data => {
+                    addAirportMarkers(data);
+                })
+            })
+
+            if (outline.hasClass('active')) {
+                showGeoLayer(countryCode, data);
+            }
+
             getEarthquakes({ north, south, east, west}, data => {
                 if (data.length > 0) {
-                    renderToast({name: 'XPlore', src: './src/assets/images/logo192.png', text: `The most recent earthquake in ${country} was a magnitude of ${data[0].magnitude}, recorded on ${new Date(data[0].datetime).toDateString()}.`});
+                    renderToast({name: 'Gazetteer', src: './src/assets/images/logo192.png', text: `The most recent earthquake in ${prependTheToCountry(country)} was a magnitude of ${data[0].magnitude}, recorded on ${new Date(data[0].datetime).toDateString()}.`});
                 } else {
-                    renderToast({name: 'XPlore', src: './src/assets/images/logo192.png', text: `There have been no recently reported earthquakes in ${country}.`});
+                    renderToast({name: 'Gazetteer', src: './src/assets/images/logo192.png', text: `There have been no recently reported earthquakes in ${country}.`});
                 }
             })
+
             centre.country = data;
             renderCountryData(data);
             getExchangeRates(data.currencyCode, data => {
@@ -1397,6 +1466,8 @@ const renderMainElements = () => {
     })
     
     map.addLayer(businessLayerGroup);
+    map.addLayer(cityLayerGroup);
+    // map.addLayer(airportLayerGroup);
 
     // Category Selector
     /***************************************************************************************************/
@@ -1413,7 +1484,8 @@ const renderMainElements = () => {
     moreInfoMenu.append(info);
     info.append(infoHeader, infoBody, infoFooter);
     infoHeader.append(infoHeaderText, infoClose);
-    infoBody.append(addressList, formattedAddress, countryState, continent, capital, population, areaSqKm, menuWeather, newsArticles, currencyList, wikis);
+    infoBody.append(addressList, formattedAddress, countryState, countryInfo, menuWeather, newsArticles, currencyList, wikis);
+    countryInfo.append(continent, capital, population, areaSqKm);
     infoFooter.append(powered, attrib);
 
     for (let name in attributions) {
@@ -1461,12 +1533,12 @@ const renderControls = () => {
     // More Info Button
     /***************************************************************************************************/
     moreInfo.html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-info"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>');
-    bottomRightControls.prepend(moreInfo);
+    searchBar.prepend(moreInfo);
 
     // Country Outline Button
     /***************************************************************************************************/
     outline.html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-pen-tool"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>');
-    bottomRightControls.prepend(outline);
+    // bottomRightControls.prepend(outline);
 
     // crosshairButton Button
     /***************************************************************************************************/
@@ -1483,10 +1555,10 @@ const renderControls = () => {
     // Search Bar
     /***************************************************************************************************/
     topLeftControls.append(searchBarContainer);
-    searchBarContainer.append(searchBar, searchResults);
+    searchBarContainer.append(searchBar);
     // menuButton.html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>');
     searchLabel.html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
-    searchBar.append(input, countrySelect, searchLabel/*, menuButton*/);
+    searchBar.append(countrySelect, searchLabel/*, menuButton*/);
     fullscreenButton.html(maximize);
     searchBar.append(fullscreenButton);
 
@@ -1554,7 +1626,7 @@ myLocation.on('click', e => {
     if (!location) {
         renderNoLocation()
     } else {
-        goToMyLocation(map);
+        goToMyLocation();
     }
 })
 
@@ -1569,39 +1641,6 @@ outline.on('click', e => {
 /***************************************************************************************************/
 crosshairButton.on('click', toggleCrosshair);
 
-// Searchbar # Show & Hide Search Results on Focus and Blur
-/***************************************************************************************************/
-input.on('focus', e => {
-    countrySelect.addClass('hide');
-    resultsCollapse.show();
-})
-
-input.on('blur', e => {
-    countrySelect.removeClass('hide');
-    resultsCollapse.hide();
-})
-
-// Searchbar # Make A Call To Get Addresses (prev call is cancelled everytime the user presses a key)
-/***************************************************************************************************/
-input.on('input', e => {
-    // Close if value length is more than 0
-    if (e.target.value.length === 0) {
-        resultsCollapse.hide();
-    }
-
-    // If there's a timeout clear it so it doesn't trigger for every keypress/input
-    if (searchTimeout) {
-        clearTimeout(searchTimeout);
-    }
-
-    // Set timeout and function to call the API
-    searchTimeout = setTimeout(() => {
-        // Get data from the event
-        const data = K.getInputData(e);
-        // Make API calls
-        autocompleteAddresses(data);
-    }, 500)
-})
 
 // Searchbar Fullscreen Button # Toggle Fullscreen
 /*****************************************************************************************/
@@ -1621,12 +1660,14 @@ countrySelect.on('change', e => {
         if (Object.keys(markerLayerGroup._layers).length === 1) {
             removeMarkers();
         }
+        map.removeEventListener('moveend', handleMapMoveEnd);
+        map.fitBounds(L.latLngBounds(corner1, corner2));
+        map.addEventListener('moveend', handleMapMoveEnd);
 
         addLocationMarker(L.latLng((north + south) / 2, (east + west) / 2));
-
-        map.flyToBounds(L.latLngBounds(corner1, corner2));
+        
         if (outline.hasClass('active')) {
-            showGeoLayer(e.target.value);
+            showGeoLayer(e.target.value, data);
         }
     })
 })
@@ -1651,8 +1692,12 @@ $(() => {
     /***************************************************************************************************/
     preloader.addClass('hide');
 
+    // Hide the preloader
+    /***************************************************************************************************/
+    renderToast({name: 'Gazetteer', src: './src/assets/images/logo192.png', text: `Welcome to Gazetteer. Click the <svg class="inline" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-info"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> button above at any point for more information about the coutry or location you're currently viewing.`});
+
     // Got To Users Location
     /***************************************************************************************************/
-    goToMyLocation(map);
+    goToMyLocation();
 
 })
