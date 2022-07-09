@@ -1,0 +1,59 @@
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    12.5% { transform: rotate(90deg); }
+    25% { transform: rotate(90deg); }
+    37.5% { transform: rotate(180deg); }
+    50% { transform: rotate(180deg);}
+    62.5% { transform: rotate(270deg); }
+    75% { transform: rotate(270deg); }
+    87.5% { transform: rotate(360deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes left {
+    0% { transform: translateX(0) scale(.2); }
+    12.5% { transform: translateX(-72px) scale(1); }
+    25% { transform: translateX(0) scale(.2); }
+    37.5% { transform: translateX(-72px) scale(1); }
+    50% { transform: translateX(0) scale(.2); }
+    62.5% { transform: translateX(-72px) scale(1); }
+    75% { transform: translateX(0) scale(.2); }
+    87.5% { transform: translateX(-72px) scale(1); }
+    100% { transform: translateX(0) scale(.2); }
+}
+
+@keyframes top {
+    0% { transform: translateY(0) scale(.2); }
+    12.5% { transform: translateY(-72px) scale(1); }
+    25% { transform: translateY(0) scale(.2); }
+    37.5% { transform: translateY(-72px) scale(1); }
+    50% { transform: translateY(0) scale(.2); }
+    62.5% { transform: translateY(-72px) scale(1); }
+    75% { transform: translateY(0) scale(.2); }
+    87.5% { transform: translateY(-72px) scale(1); }
+    100% { transform: translateX(0) scale(.2); }
+}
+
+@keyframes right {
+    0% { transform: translateX(0) scale(.2); }
+    12.5% { transform: translateX(72px) scale(1); }
+    25% { transform: translateX(0) scale(.2); }
+    37.5% { transform: translateX(72px) scale(1); }
+    50% { transform: translateX(0) scale(.2); }
+    62.5% { transform: translateX(72px) scale(1); }
+    75% { transform: translateX(0) scale(.2); }
+    87.5% { transform: translateX(72px) scale(1); }
+    100% { transform: translateX(0) scale(.2); }
+}
+
+@keyframes bottom {
+    0% { transform: translateY(0) scale(.2); }
+    12.5% { transform: translateY(72px) scale(1); }
+    25% { transform: translateY(0) scale(.2); }
+    37.5% { transform: translateY(72px) scale(1); }
+    50% { transform: translateY(0) scale(.2); }
+    62.5% { transform: translateY(72px) scale(1); }
+    75% { transform: translateY(0) scale(.2); }
+    87.5% { transform: translateY(72px) scale(1); }
+    100% { transform: translateX(0) scale(.2); }
+}
