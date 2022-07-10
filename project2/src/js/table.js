@@ -310,8 +310,6 @@ class Row {
     _root;
     _data;
     _cells = [];
-    _isLongTouch = false;
-    _touchTimeout = null;
 
     constructor(data, parent, type = 'td') {
         this.setParent(parent);
@@ -488,47 +486,6 @@ class Row {
         }
     }
 
-    handleTouchStart(e) {
-        e.preventDefault();
-
-        this._touchTimeout = setTimeout(() => {
-            this.handleLongTouch(e);
-        }, 1000)
-    }
-
-    handleTouchEnd(e, isButton) {
-        const touchSelect = document.getElementById('touch-select');
-
-        clearTimeout(this._touchTimeout);
-        if (this._isLongTouch) {
-            touchSelect.classList.remove('active');
-            this._isLongTouch = false;
-        } else {
-            if (!isButton || !Row.isSelectedRow(this)) {
-                if (this.parent._touchSelectEnabled) {
-                    this.ctrlClick();
-                    if (this.parent.table.app._selectedRows.length === 0) {
-                        this.parent._touchSelectEnabled = false;
-                    }
-                    if (this.parent.table.app._selectedRows.length < this.parent._rows.length) {
-                        touchSelect.classList.remove('active');
-                    } else {
-                        touchSelect.classList.add('active');
-                    }
-                } else {
-                    this.click(e);
-                }
-            }
-
-            if (isButton) {
-                this.parent.table.app._formModal.bs.show();
-                this.parent.table.app._formModal.handleModalShow(e);
-            }
-
-            this.parent.table.app.renderCRUDButtons();
-        }
-    }
-
     renderTH() {
         this.setRoot(document.createElement('tr'));
         const cell = document.createElement('th');
@@ -564,6 +521,81 @@ class Row {
         this.parent.root.append(this.root);
     }
 
+    handleTouchStart = e => {
+        const originalPosition = {
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY
+        }
+
+        const isButton = e.target instanceof HTMLButtonElement;
+        let isLongTouch = false;
+        let isTouchMove = false;
+
+        const timeout = setTimeout(() => {
+            if (!isTouchMove) {
+                isLongTouch = true;
+                this.handleLongTouch(e);
+            }
+        }, 1000);
+
+        const touchend = e => {
+            const touchControls = document.getElementById('touch-controls');
+            const touchSelect = document.getElementById('touch-select');
+
+            clearTimeout(timeout);
+
+            if (this.parent._touchSelectEnabled && !isLongTouch && !isTouchMove) {
+                e.preventDefault();
+
+                if (!isButton || !Row.isSelectedRow(this)) {
+                    this.ctrlClick();
+                    if (this.parent.table.app._selectedRows.length === 0) {
+                        touchControls.classList.add('hide');
+                        this.parent._touchSelectEnabled = false;
+                    }
+                    if (this.parent.table.app._selectedRows.length < this.parent._rows.length) {
+                        touchSelect.classList.remove('active');
+                    } else {
+                        touchSelect.classList.add('active');
+                    }
+                }
+
+                if (isButton) {
+                    e.stopPropagation();
+                    this.parent.table.app._formModal.bs.show();
+                    this.parent.table.app._formModal.handleModalShow(e);
+                }
+            } else if (!this.parent._touchSelectEnabled && !isLongTouch && !isTouchMove) {
+                if (isButton && Row.isSelectedRow(this)) {
+                    e.preventDefault();
+                    this.parent.table.app._formModal.bs.show();
+                    this.parent.table.app._formModal.handleModalShow(e);
+                }
+            }
+
+            e.target.removeEventListener('touchend', touchend);
+            e.target.removeEventListener('touchmove', touchmove);
+        }
+
+        const touchmove = e => {
+            if (e.touches[0].clientX > originalPosition.x + 32 || 
+                e.touches[0].clientX < originalPosition.x - 32 ||
+                e.touches[0].clientY > originalPosition.y + 32 || 
+                e.touches[0].clientY < originalPosition.y - 32
+            ) {
+                isTouchMove = true;
+            }
+        }
+
+        if (isLongTouch) {
+            e.preventDefault();
+            touchSelect.classList.remove('active');
+        }
+
+        e.target.addEventListener('touchend', touchend);
+        e.target.addEventListener('touchmove', touchmove);
+    }
+
     renderTD() {
         const index = this.parent.table.app._selectedRows.findIndex(row => row.data === this.data);
         if (index < 0) {
@@ -591,15 +623,7 @@ class Row {
                 this.handleClick.bind(this)(e, true);
             })
 
-            button.addEventListener('touchstart', e => {
-                e.stopPropagation();
-                this.handleTouchStart.bind(this)(e, true);
-            })
-
-            button.addEventListener('touchend', e => {
-                e.stopPropagation();
-                this.handleTouchEnd.bind(this)(e, true);
-            })
+            button.addEventListener('touchstart', this.handleTouchStart.bind(this))
 
             if (firstName > -1) {
                 values[firstName] = `${values[firstName]} ${values[firstName + 1]}`;
@@ -607,8 +631,8 @@ class Row {
             }
 
             this.root.addEventListener('click', this.handleClick.bind(this));
+
             this.root.addEventListener('touchstart', this.handleTouchStart.bind(this));
-            this.root.addEventListener('touchend', this.handleTouchEnd.bind(this));
 
             cell.appendChild(button);
             this.root.append(cell);
