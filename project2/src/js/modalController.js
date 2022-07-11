@@ -291,6 +291,8 @@ class ModalController {
         const danger = element.querySelector('.btn-danger');
         const secondary = element.querySelector('.btn-secondary');
 
+        danger.classList.remove('none');
+
         const dismiss = () => {
             this.modal.classList.remove('disabled');
             toast.hide();
@@ -313,16 +315,38 @@ class ModalController {
             removeListeners();
         }
 
-        if ((this.isEditied && type === 'close') || type === 'delete') {
+        const createToast = (canContinue, text) => {
+            if (!canContinue) {
+                danger.classList.add('none');
+            }
             this.modal.classList.add('disabled');
             danger.addEventListener('click', handleLeave);
             secondary.addEventListener('click', handleStay);
-            if (type === 'delete') {
-                element.childNodes[1].firstChild.nodeValue = `Are you sure you want to delete this ${this.table.slice(0,this.table.length - 1)}?`;
-            } else if (type === 'close') {
-                element.childNodes[1].firstChild.nodeValue = 'You will lose any unsaved changes. Are you sure you want to proceed?';
-            }
+            element.childNodes[1].firstChild.nodeValue = text;
+
             toast.show();
+        }
+
+        if (type === 'delete' && (this._table === 'departments' || this.table === 'locations')) {
+            if (this._table === 'departments') {
+                if (this.app._selectedRows[this.selectedRow].data.hasEmployees()) {
+                    createToast(false, 'You cannot delete a department if it still contains employees.');
+                    return;
+                }
+            } else if (this._table === 'locations') {
+                if (this.app._selectedRows[this.selectedRow].data.hasDepartments()) {
+                    createToast(false, 'You cannot delete a department if it still contains employees.');
+                    return;
+                }
+            }
+        }
+        
+        if ((this.isEditied && type === 'close') || type === 'delete') {
+            if (type === 'delete') {
+                createToast(true, `Are you sure you want to delete this ${this.table.slice(0,this.table.length - 1)}?`);
+            } else if (type === 'close') {
+                createToast(true, 'You will lose any unsaved changes. Are you sure you want to proceed?');
+            }
         } else {
             cb();
         }

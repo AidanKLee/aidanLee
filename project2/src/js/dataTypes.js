@@ -201,6 +201,10 @@ class Department {
         }
     }
 
+    hasEmployees() {
+        return Employee.data.list.findIndex(employee => employee.department === this.name) >= 0;
+    }
+
     static getById(id) {
         return Department.data.list.filter(department => id === department.id)[0];
     }
@@ -282,6 +286,10 @@ class Location {
         } else {
             throw new Error('Location name must be of type string.')
         }
+    }
+
+    hasDepartments() {
+        return Department.data.list.findIndex(department => department.location.id === this.id) >= 0;
     }
 
     static getById(id) {
