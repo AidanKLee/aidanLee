@@ -202,7 +202,7 @@ class Department {
     }
 
     hasEmployees() {
-        return Employee.data.list.findIndex(employee => employee.department === this.name) >= 0;
+        return Employee.data.list.findIndex(employee => employee.department === this.name || employee.department.id === this.id) >= 0;
     }
 
     static getById(id) {
@@ -289,7 +289,7 @@ class Location {
     }
 
     hasDepartments() {
-        return Department.data.list.findIndex(department => department.location.id === this.id) >= 0;
+        return Department.data.list.findIndex(department => department.location.id === this.id || department.location === this.name) >= 0;
     }
 
     static getById(id) {
