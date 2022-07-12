@@ -285,7 +285,7 @@ class ModalController {
         this.insertSelectedRow();
     }
 
-    handleWarn(type, cb) {
+    handleWarn(type, cb, multi = false) {
         const element = document.getElementById('change-handler');
         const toast = bootstrap.Toast.getOrCreateInstance(element, { autohide: false});
         const danger = element.querySelector('.btn-danger');
@@ -315,10 +315,11 @@ class ModalController {
             removeListeners();
         }
 
-        const createToast = (canContinue, text) => {
+        const createToast = (element, canContinue, text) => {
             if (!canContinue) {
                 danger.classList.add('none');
             }
+
             this.modal.classList.add('disabled');
             danger.addEventListener('click', handleLeave);
             secondary.addEventListener('click', handleStay);
@@ -327,25 +328,39 @@ class ModalController {
             toast.show();
         }
 
-        if (type === 'delete' && (this._table === 'departments' || this.table === 'locations')) {
-            if (this._table === 'departments') {
-                if (this.app._selectedRows[this.selectedRow].data.hasEmployees()) {
-                    createToast(false, 'You cannot delete a department if it still contains employees.');
+        if (type === 'delete' && (this._app._selectedTable === 'departments' || this._app._selectedTable === 'locations')) {
+            if (this._app._selectedTable === 'departments') {
+                if (multi) {
+                    const deptHasEmployess = this._app._selectedRows.findIndex(row => row.data.hasEmployees()) >= 0;
+                    if (deptHasEmployess) {
+                        createToast(element, false, 'You cannot delete a department if it still contains employees.');
+                        return;
+                    }
+                } else if (this.app._selectedRows[this.selectedRow].data.hasEmployees()) {
+                    createToast(element, false, 'You cannot delete a department if it still contains employees.');
                     return;
                 }
-            } else if (this._table === 'locations') {
-                if (this.app._selectedRows[this.selectedRow].data.hasDepartments()) {
-                    createToast(false, 'You cannot delete a department if it still contains employees.');
+            } else if (this._app._selectedTable === 'locations') {
+                if (multi) {
+                    const locationHasDept = this._app._selectedRows.findIndex(row => row.data.hasDepartments()) >= 0;
+                    if (locationHasDept) {
+                        createToast(element, false, 'You cannot delete a location if it still has departments.');
+                        return;
+                    }
+                } else if (this.app._selectedRows[this.selectedRow].data.hasDepartments()) {
+                    createToast(element, false, 'You cannot delete a location if it still has departments.');
                     return;
                 }
             }
         }
         
         if ((this.isEditied && type === 'close') || type === 'delete') {
-            if (type === 'delete') {
-                createToast(true, `Are you sure you want to delete this ${this.table.slice(0,this.table.length - 1)}?`);
+            if (type === 'delete' && multi) {
+                createToast(element, true, `Are you sure you want to delete these ${this._app._selectedTable}?`);
+            } else if (type === 'delete') {
+                createToast(element, true, `Are you sure you want to delete this ${this._app._selectedTable.slice(0,this._app._selectedTable.length - 1)}?`);
             } else if (type === 'close') {
-                createToast(true, 'You will lose any unsaved changes. Are you sure you want to proceed?');
+                createToast(element, true, 'You will lose any unsaved changes. Are you sure you want to proceed?');
             }
         } else {
             cb();

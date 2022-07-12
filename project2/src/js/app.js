@@ -239,19 +239,21 @@ class App {
                 }
 
                 if (id.includes('delete')) {
-                    buttons[id].addEventListener('click', async e => {
-                        await Promise.all(this._selectedRows.map(async row => {
-                            if (id.includes('employee')) {
-                                await controller.deleteEmployee(row.data.id);
-                            } else if (id.includes('department')) {
-                                await controller.deleteDepartment(row.data.id);
-                            } else if (id.includes('location')) {
-                                await controller.deleteLocation(row.data.id);
-                            }
-                        }))
+                    buttons[id].addEventListener('click', e => {
+                        this._formModal.handleWarn('delete', async () => {
+                            await Promise.all(this._selectedRows.map(async row => {
+                                if (id.includes('employee')) {
+                                    await controller.deleteEmployee(row.data.id);
+                                } else if (id.includes('department')) {
+                                    await controller.deleteDepartment(row.data.id);
+                                } else if (id.includes('location')) {
+                                    await controller.deleteLocation(row.data.id);
+                                }
+                            }))
 
-                        await this.getData();
-                        this.tableSelect(this._selectedTable);
+                            await this.getData();
+                            this.tableSelect(this._selectedTable);
+                        }, this._selectedRows.length > 1);
                     })
                 }
             }
@@ -310,8 +312,8 @@ class App {
             })
         })
 
-        document.getElementById('refresh').addEventListener('click', e => {
-            this.getData();
+        document.getElementById('refresh').addEventListener('click', async e => {
+            await this.getData();
             this.tableSelect(this._selectedTable);
         })
 

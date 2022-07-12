@@ -572,7 +572,8 @@ class Row {
                     this.parent.table.app._formModal.handleModalShow(e);
                 }
             }
-
+            
+            this.parent.table.app.renderCRUDButtons();
             e.target.removeEventListener('touchend', touchend);
             e.target.removeEventListener('touchmove', touchmove);
         }
