@@ -12,8 +12,18 @@ html {
     font-size: 16px;
 }
 
+main {
+    min-height: calc(100vh - 54px);
+    background-color: white;
+}
+
 svg {
     pointer-events: none;
+}
+
+header.disabled, main.disabled {
+    pointer-events: none;
+    filter: brightness(.8);
 }
 
 .none {

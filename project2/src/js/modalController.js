@@ -286,6 +286,8 @@ class ModalController {
     }
 
     handleWarn(type, cb, multi = false) {
+        const header = document.querySelector('header');
+        const main = document.querySelector('main');
         const element = document.getElementById('change-handler');
         const toast = bootstrap.Toast.getOrCreateInstance(element, { autohide: false});
         const danger = element.querySelector('.btn-danger');
@@ -295,6 +297,8 @@ class ModalController {
 
         const dismiss = () => {
             this.modal.classList.remove('disabled');
+            header.classList.remove('disabled');
+            main.classList.remove('disabled');
             toast.hide();
         }
 
@@ -321,6 +325,8 @@ class ModalController {
             }
 
             this.modal.classList.add('disabled');
+            header.classList.add('disabled');
+            main.classList.add('disabled');
             danger.addEventListener('click', handleLeave);
             secondary.addEventListener('click', handleStay);
             element.childNodes[1].firstChild.nodeValue = text;
