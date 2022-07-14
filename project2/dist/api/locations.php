@@ -13,8 +13,9 @@
     header('Content-Type: application/json; charset=UTF-8');
 
     if ($method === "GET") {
-        parse_str(file_get_contents("php://input"),$_GET);
-        if (isset($_GET["id"])) {
+        if (isset($_GET["count"])) {
+            $response = $db->one('SELECT count(id) as "count" FROM department WHERE locationID = ?', [$_GET["count"]], "i");
+        } else if (isset($_GET["id"])) {
             $response = $db->one('SELECT id, name FROM location WHERE id = ?', [$_GET["id"]], "i");
         } else {
             $response = $db->query('SELECT id, name FROM location');

@@ -299,7 +299,7 @@ class TableHeader {
         this.setRoot(document.createElement('thead'));
         this.setRow(new Row(rowData, this, 'th'));
         this.table.root.append(this.root);
-        this.renderSortButton()
+        // this.renderSortButton()
     }
 
 }
@@ -401,7 +401,7 @@ class Row {
         return row.parent.table.app._selectedRows.includes(row);
     }
 
-    handleClick(e, isButton) {
+    async handleClick(e, isButton, type) {
         if (e.ctrlKey) {
             if (!isButton || !Row.isSelectedRow(this)) {
                 this.ctrlClick(e);
@@ -413,8 +413,12 @@ class Row {
         }
         
         if (isButton) {
-            this.parent.table.app._formModal.bs.show();
-            this.parent.table.app._formModal.handleModalShow(e);
+            if (type === 'delete') {
+                this.parent.table.app.handleNoModalDelete(e);
+            } else {
+                await this.parent.table.app._formModal.handleModalShow(e);
+                this.parent.table.app._formModal.bs.show();
+            }
         }
         
         this.parent.table.app.renderCRUDButtons();
@@ -486,9 +490,14 @@ class Row {
         }
     }
 
+    async getLatestData() {
+        
+    }
+
     renderTH() {
         this.setRoot(document.createElement('tr'));
         const cell = document.createElement('th');
+        const cell2 = cell.cloneNode(false);
 
         const firstName = this.data.findIndex(key => key === '_firstName');
 
@@ -498,36 +507,38 @@ class Row {
         }
 
         this.root.append(cell);
+        this.root.append(cell2);
         
         this.data.forEach(key => {
-            key = K.camelToTitle(key.slice(1));
-            if (key.toUpperCase() === 'ID') { key = key.toUpperCase() };
-            const cell = document.createElement('th');
-            const container = document.createElement('div');
-            const icon = `<svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" viewBox="0 0 48 48"><path d="m14 28 10-10.05L34 28Z"/></svg>`;
-
-            container.className = 'fw-semibold d-flex justify-content-between align-items-center';
-
-            cell.addEventListener('click', this.handleHeaderClick.bind(this));
-
-            this._cells.push(cell);
-
-            this.root.append(cell);
-            cell.append(container);
-            container.append(key);
-            container.innerHTML += icon;
+            if (key !== '_id') {
+                key = K.camelToTitle(key.slice(1));
+                if (key.toUpperCase() === 'ID') { key = key.toUpperCase() };
+                const cell = document.createElement('th');
+                const container = document.createElement('div');
+                const icon = `<svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" viewBox="0 0 48 48"><path d="m14 28 10-10.05L34 28Z"/></svg>`;
+    
+                container.className = 'fw-semibold d-flex justify-content-between align-items-center';
+    
+                cell.addEventListener('click', this.handleHeaderClick.bind(this));
+    
+                this._cells.push(cell);
+    
+                this.root.append(cell);
+                cell.append(container);
+                container.append(key);
+                container.innerHTML += icon;
+            }
         })
 
         this.parent.root.append(this.root);
     }
 
-    handleTouchStart = e => {
+    handleTouchStart = (e) => {
         const originalPosition = {
             x: e.touches[0].clientX,
             y: e.touches[0].clientY
         }
 
-        const isButton = e.target instanceof HTMLButtonElement;
         let isLongTouch = false;
         let isTouchMove = false;
 
@@ -536,18 +547,20 @@ class Row {
                 isLongTouch = true;
                 this.handleLongTouch(e);
             }
-        }, 1000);
+        }, 500);
 
-        const touchend = e => {
+        const touchend = async e => {
             const touchControls = document.getElementById('touch-controls');
             const touchSelect = document.getElementById('touch-select');
+            let buttonType = e.target.getAttribute('data-bs-type');
+            buttonType = buttonType ? buttonType.split('-')[0] : buttonType;
 
             clearTimeout(timeout);
 
             if (this.parent._touchSelectEnabled && !isLongTouch && !isTouchMove) {
                 e.preventDefault();
 
-                if (!isButton || !Row.isSelectedRow(this)) {
+                if (!buttonType || !Row.isSelectedRow(this)) {
                     this.ctrlClick();
                     if (this.parent.table.app._selectedRows.length === 0) {
                         touchControls.classList.add('hide');
@@ -560,16 +573,24 @@ class Row {
                     }
                 }
 
-                if (isButton) {
+                if (buttonType) {
                     e.stopPropagation();
-                    this.parent.table.app._formModal.bs.show();
-                    this.parent.table.app._formModal.handleModalShow(e);
+                    if (buttonType === 'delete') {
+                        this.parent.table.app.handleNoModalDelete(e);
+                    } else {
+                        await this.parent.table.app._formModal.handleModalShow(e);
+                        this.parent.table.app._formModal.bs.show();
+                    }
                 }
             } else if (!this.parent._touchSelectEnabled && !isLongTouch && !isTouchMove) {
-                if (isButton && Row.isSelectedRow(this)) {
-                    e.preventDefault();
-                    this.parent.table.app._formModal.bs.show();
-                    this.parent.table.app._formModal.handleModalShow(e);
+                if (buttonType && Row.isSelectedRow(this)) {
+                    e.stopPropagation();
+                    if (buttonType === 'delete') {
+                        this.parent.table.app.handleNoModalDelete(e);
+                    } else {
+                        await this.parent.table.app._formModal.handleModalShow(e);
+                        this.parent.table.app._formModal.bs.show();
+                    }
                 }
             }
             
@@ -602,7 +623,10 @@ class Row {
         if (index < 0) {
             this.setRoot(document.createElement('tr'));
             const cell = document.createElement('td');
+            const cellActions = cell.cloneNode(false);
             const button = document.createElement('button');
+            const editB = button.cloneNode(false);
+            const deleteB = button.cloneNode(false);
             let keys = Object.keys(this.data);
             let values = Object.values(this.data);
 
@@ -617,44 +641,62 @@ class Row {
                 )
             );
 
-            button.setAttribute('data-bs-target', '#form-modal');
+            button.setAttribute('data-bs-target', 'form-modal');
             button.setAttribute('data-bs-type', `edit-${this.data.constructor.name.toLowerCase()}-readonly`);
-            button.addEventListener('click', e => {
-                e.stopPropagation();
-                this.handleClick.bind(this)(e, true);
-            })
 
-            button.addEventListener('touchstart', this.handleTouchStart.bind(this))
+
+            editB.className = 'btn btn-sm btn-light border rounded me-1';
+            deleteB.className = 'btn btn-sm btn-light border rounded';
+            editB.innerHTML = '<i class="fa-solid fa-sm fa-pen-to-square"></i>';
+            deleteB.innerHTML = '<i class="fa-solid fa-sm fa-trash-can"></i>';
+            editB.setAttribute('data-bs-type', `edit-${this.data.constructor.name.toLowerCase()}`);
+            deleteB.setAttribute('data-bs-type', `delete-${this.data.constructor.name.toLowerCase()}`);
+            deleteB.setAttribute('id', `delete-${this.data.constructor.name.toLowerCase()}${this.data.id}`)
 
             if (firstName > -1) {
                 values[firstName] = `${values[firstName]} ${values[firstName + 1]}`;
                 values = values.slice(0, firstName + 1).concat(values.slice(firstName + 2));
             }
 
-            this.root.addEventListener('click', this.handleClick.bind(this));
+            [button, editB, deleteB].forEach(button => {
+                button.addEventListener('click', e => {
+                    e.stopPropagation();
+                    this.handleClick.bind(this)(e, true, button.getAttribute('data-bs-type').split('-')[0]);
+                })
+    
+                button.addEventListener('touchstart', this.handleTouchStart.bind(this));
+            })
 
+            this.root.addEventListener('click', this.handleClick.bind(this));
             this.root.addEventListener('touchstart', this.handleTouchStart.bind(this));
 
             cell.appendChild(button);
-            this.root.append(cell);
+            cellActions.appendChild(editB);
+            cellActions.appendChild(deleteB);
+            this.root.appendChild(cell);
+            this.root.appendChild(cellActions);
             
-            values.forEach(value => {
-                if (value instanceof Object) {
-                    value = value.name;
+            values.forEach((value, i) => {
+                const notId = Object.keys(this.data)[i] !== '_id';
+                
+                if (notId) {
+                    if (value instanceof Object) {
+                        value = value.name;
+                    }
+    
+                    const cell = document.createElement('td');
+                    const container = document.createElement('div');
+    
+                    cell.setAttribute('data-bs-toggle','tooltip');
+                    cell.setAttribute('title', value);
+                    cell.setAttribute('data-bs-delay', '{"show": 500, "hide": 0}');
+    
+                    this._cells.push(cell);
+    
+                    this.root.append(cell);
+                    cell.append(container);
+                    container.append(value);
                 }
-
-                const cell = document.createElement('td');
-                const container = document.createElement('div');
-
-                cell.setAttribute('data-bs-toggle','tooltip');
-                cell.setAttribute('title', value);
-                cell.setAttribute('data-bs-delay', '{"show": 500, "hide": 0}');
-
-                this._cells.push(cell);
-
-                this.root.append(cell);
-                cell.append(container);
-                container.append(value);
             })
 
             this.parent.root.append(this.root);

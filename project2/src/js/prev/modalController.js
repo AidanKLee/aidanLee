@@ -118,7 +118,7 @@ class ModalController {
         this._table = name;
     }
 
-    setSelectedRow(value) {
+    async setSelectedRow(value) {
         if (typeof value === 'function') {
             this._selectedRow = value(this._selectedRow, this.app._selectedRows);
         } else if (typeof value === 'number') {
@@ -126,12 +126,11 @@ class ModalController {
         } else {
             throw new Error('You can only set the selected row using a function of a number');
         }
+        await this.app._selectedRows[this.selectedRow].data.getLatestData();
     }
 
     insertSelectedRow() {
         const selectedFormEntries = Array.from(this.forms[this.selectedForm].querySelectorAll('input, select'));
-
-        this.modal.querySelector('.data-id').value = `#${this.app._selectedRows[this.selectedRow]._data._id}`;
 
         selectedFormEntries.forEach(entry => {
             const entryName = entry.getAttribute('name');
@@ -157,7 +156,9 @@ class ModalController {
         } else {
             this.modal.classList.add('editing');
             formEntries.forEach(entry => {
-                if (this.app._selectedTable !== 'employees' || entry.name !== 'location') {
+                if (this.app._selectedTable === 'employees' && entry.name === 'location') {
+                    entry.disabled = true;
+                } else {
                     entry.disabled = false;
                 }
             });
@@ -285,7 +286,7 @@ class ModalController {
         this.insertSelectedRow();
     }
 
-    handleWarn(type, cb, multi = false) {
+    async handleWarn(type, cb, multi = false) {
         const header = document.querySelector('header');
         const main = document.querySelector('main');
         const element = document.getElementById('change-handler');
@@ -337,23 +338,25 @@ class ModalController {
         if (type === 'delete' && (this._app._selectedTable === 'departments' || this._app._selectedTable === 'locations')) {
             if (this._app._selectedTable === 'departments') {
                 if (multi) {
-                    const deptHasEmployess = this._app._selectedRows.findIndex(row => row.data.hasEmployees()) >= 0;
+                    let deptHasEmployess = await Promise.all(this._app._selectedRows.map(async row => await row.data.hasEmployees()));
+                    deptHasEmployess = deptHasEmployess.includes(true);
                     if (deptHasEmployess) {
                         createToast(element, false, 'You cannot delete a department if it still contains employees.');
                         return;
                     }
-                } else if (this.app._selectedRows[this.selectedRow].data.hasEmployees()) {
+                } else if (await this.app._selectedRows[this.selectedRow].data.hasEmployees()) {
                     createToast(element, false, 'You cannot delete a department if it still contains employees.');
                     return;
                 }
             } else if (this._app._selectedTable === 'locations') {
                 if (multi) {
-                    const locationHasDept = this._app._selectedRows.findIndex(row => row.data.hasDepartments()) >= 0;
+                    let locationHasDept = await Promise.all(this._app._selectedRows.map(async row => await row.data.hasDepartments()));
+                    locationHasDept = locationHasDept.includes(true);
                     if (locationHasDept) {
                         createToast(element, false, 'You cannot delete a location if it still has departments.');
                         return;
                     }
-                } else if (this.app._selectedRows[this.selectedRow].data.hasDepartments()) {
+                } else if (await this.app._selectedRows[this.selectedRow].data.hasDepartments()) {
                     createToast(element, false, 'You cannot delete a location if it still has departments.');
                     return;
                 }
@@ -361,19 +364,22 @@ class ModalController {
         }
         
         if ((this.isEditied && type === 'close') || type === 'delete') {
+            const firstName = this.app._selectedRows[this.selectedRow].data.firstName;
+            const name = firstName ? `${firstName} ${this.app._selectedRows[this.selectedRow].data.lastName}` : this.app._selectedRows[this.selectedRow].data.name;
+
             if (type === 'delete' && multi) {
-                createToast(element, true, `Are you sure you want to delete these ${this._app._selectedTable}?`);
+                createToast(element, true, `Delete ${this.app._selectedRows.length} ${this._app._selectedTable}?`);
             } else if (type === 'delete') {
-                createToast(element, true, `Are you sure you want to delete this ${this._app._selectedTable.slice(0,this._app._selectedTable.length - 1)}?`);
+                createToast(element, true, `Delete ${name} from ${this._app._selectedTable}?`);
             } else if (type === 'close') {
-                createToast(element, true, 'You will lose any unsaved changes. Are you sure you want to proceed?');
+                createToast(element, true, 'You will lose any unsaved changes. Proceed?');
             }
         } else {
             cb();
         }
     }
 
-    handleModalShow(e) {
+    async handleModalShow(e) {
         const opener = e.target;
         const bsType = opener.getAttribute('data-bs-type');
         let [ modalType, table, readOnly ] = bsType.split('-');
@@ -383,12 +389,12 @@ class ModalController {
         this.setTable(table);
 
         this.disableButtons();
-        this.setSelectedRow(0);
+        if (modalType !== 'add') { await this.setSelectedRow(0); }
+        
         this.setSelectedForm(this.forms.findIndex(form => form.getAttribute('id') === table));
 
         this.forms.forEach(form => form.remove());
         this.modal.querySelector('.modal-body').prepend(this.forms[this.selectedForm]);
-        this.modal.querySelector('.data-id').value = '';
         
         this.app.insertFormOptions();
 

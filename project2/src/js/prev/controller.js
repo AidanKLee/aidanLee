@@ -87,6 +87,11 @@ class Controller extends EventTarget {
         return await this.request({ url: `${uri}departments.php`, data: { id } });
     }
 
+    async getDepartmentEmployeeCount(id) {
+        const res = await this.request({ url: `${uri}departments.php`, data: { count: id } });
+        return res.count;
+    }
+
     async addDepartment(data) {
         return await this.request({ url: `${uri}departments.php`, data, type: 'POST' });
     }
@@ -107,6 +112,11 @@ class Controller extends EventTarget {
     
     async getLocationById(id) {
         return await this.request({ url: `${uri}locations.php`, data: { id } });
+    }
+
+    async getLocationDepartmentCount(id) {
+        const res = await this.request({ url: `${uri}locations.php`, data: { count: id } });
+        return res.count;
     }
 
     async addLocation(data) {

@@ -13,11 +13,12 @@
     header('Content-Type: application/json; charset=UTF-8');
 
     if ($method === "GET") {
-        parse_str(file_get_contents("php://input"),$_GET);
-        if (isset($_GET["id"])) {
-            $response = $db->one('SELECT d.id, d.name, l.name as location FROM department d LEFT JOIN location l ON (d.locationID = l.id) WHERE d.id = ?', [$_GET["id"]], "i");
+        if (isset($_GET["count"])) {
+            $response = $db->one('SELECT count(id) as "count" FROM personnel WHERE departmentID = ?', [$_GET["count"]], "i");
+        } else if (isset($_GET["id"])) {
+            $response = $db->one('SELECT d.id, d.name, l.id as location FROM department d LEFT JOIN location l ON (d.locationID = l.id) WHERE d.id = ?', [$_GET["id"]], "i");
         } else {
-            $response = $db->query('SELECT d.id, d.name, l.name as location FROM department d LEFT JOIN location l ON (d.locationID = l.id)');
+            $response = $db->query('SELECT d.id, d.name, l.id as location FROM department d LEFT JOIN location l ON (d.locationID = l.id)');
         }
     } elseif ($method === "POST") {
         parse_str(file_get_contents("php://input"),$_POST);

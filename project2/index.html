@@ -28,11 +28,37 @@
             <header class="navbar navbar-dark bg-dark sticky-top navbar-expand-md">
                 <div class="container-xxl">
 
-                    <button class="navbar-brand me-0">
-                        <img class="bg-dark rounded-pill" id="logo" src="./src/images/logo192.png" alt="Company Employee Directory" />
-                    </button>
+                    <div id="count" class="btn-group">
+                        <button type="button" class="btn btn-sm btn-secondary dropdown-toggle fs-7 rounded-pill d-flex justify-content-center align-items-center" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-solid fa-people-group fa-lg me-2"></i><span class="me-1">Employees</span><p class="mb-0">(0)</p>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-start fs-7">
+                            <li><button class="dropdown-item" type="button" value="employees"><i class="fa-solid fa-people-group fa-lg me-2"></i>Employees</button></li>
+                            <li><button class="dropdown-item" type="button" value="departments"><i class="fa-solid fa-building fa-lg me-2"></i>Departments</button></li>
+                            <li><button class="dropdown-item" type="button" value="locations"><i class="fa-solid fa-location-dot fa-lg me-2"></i>Locations</button></li>
+                        </ul>
+                    </div>
 
-                    <div class="offcanvas offcanvas-end bg-dark text-light" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+                    <div id="filter-container" class="d-flex me-2">
+                        <div id="filter" class="btn-group ms-2">
+                            <button type="button" class="btn btn-sm btn-secondary dropdown-toggle rounded-pill" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                                <i class="fa-solid fa-filter"></i>
+                            </button>
+                            <ul class="dropdown-menu fs-7">
+                                <li><h6 class="ms-2 fs-7 dropdown-header">Department</h6></li>
+                                <li>
+                                    <ul id="filter-dep" class="ps-0"><a class="dropdown-item">Something here</a></ul>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="ms-2 fs-7 dropdown-header">Location</h6></li>
+                                <li>
+                                    <ul id="filter-loc" class="ps-0"><a class="dropdown-item">Something here</a></ul>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="offcanvas offcanvas-end bg-dark text-light shadow" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
 
                         <div id="searchbar" class="input-group ms-auto">
                             <label class="btn bg-light bg-opacity-10 border-0 text-light rounded-pill-start" for="search">
@@ -55,7 +81,7 @@
                         <i class="fa-solid fa-arrow-rotate-right"></i>
                     </button>
 
-                    <div class="btn-group">
+                    <div class="btn-group add-employee-wrapper">
 
                         <button id="add-employee" type="button" class="btn btn-primary btn-sm ms-2 d-flex align-items-center" data-bs-target="#form-modal" data-bs-type="add-employee">
                             <i class="fa-solid fa-plus fa-lg me-2"></i>Add Employee
@@ -121,51 +147,6 @@
 
             <main>
 
-                <div class="container-fluid bg-light border-bottom p-0">
-
-                    <div class="container-xl py-4 px-3 d-flex justify-content-between align-items-center">
-
-                        <div id="count" class="btn-group">
-                            <button type="button" class="btn btn-sm btn-secondary dropdown-toggle fs-7 rounded-pill d-flex justify-content-center align-items-center" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fa-solid fa-people-group fa-lg me-2"></i><span class="me-1">Employees</span><p class="mb-0">(0)</p>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-start fs-7">
-                                <li><button class="dropdown-item" type="button" value="employees"><i class="fa-solid fa-people-group fa-lg me-2"></i>Employees</button></li>
-                                <li><button class="dropdown-item" type="button" value="departments"><i class="fa-solid fa-building fa-lg me-2"></i>Departments</button></li>
-                                <li><button class="dropdown-item" type="button" value="locations"><i class="fa-solid fa-location-dot fa-lg me-2"></i>Locations</button></li>
-                            </ul>
-                        </div>
-                        
-                        <div id="filter-container" class="d-flex">
-                            <div id="filter" class="btn-group ms-2">
-                                <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
-                                    <i class="fa-solid fa-filter"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end fs-7">
-                                    <li><h6 class="ms-2 fs-7 dropdown-header">Department</h6></li>
-                                    <li>
-                                        <ul id="filter-dep" class="ps-0"><a class="dropdown-item">Something here</a></ul>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><h6 class="ms-2 fs-7 dropdown-header">Location</h6></li>
-                                    <li>
-                                        <ul id="filter-loc" class="ps-0"><a class="dropdown-item">Something here</a></ul>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <div id="sort" class="btn-group ms-2">
-                                <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fa-solid fa-arrow-up-a-z"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end fs-7"></ul>
-                            </div>
-                        </div>
-
-                    </div>
-
-                </div>
-
                 <div class="container-custom">
 
                     <table class="table table-striped table-hover table-borderless"></table>
@@ -191,16 +172,16 @@
 
             <div id="change-handler" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
                 <div class="toast-body">
-                    You will lose any unsaved changes. Are you sure you want to proceed?
+                    You will lose any unsaved changes. Proceed?
                     <div class="mt-2 pt-2 border-top">
-                        <button type="button" class="btn btn-danger btn-sm">Confirm</button>
-                        <button type="button" class="btn btn-secondary btn-sm">Go Back</button>
+                        <button type="button" class="btn btn-danger btn-sm">OK</button>
+                        <button type="button" class="btn btn-secondary btn-sm">Close</button>
                     </div>
                 </div>
             </div>
 
             <div class="modal fade" id="form-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="form-modal" aria-hidden="true">
-                <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-header p-2">
                             <div class="d-flex align-items-center">
@@ -217,7 +198,8 @@
                         </div>
                         <div class="modal-body p-2">
                             <form id="employees">
-                                <p class="fw-bolder text-muted mb-1 fs-7">Employee <input name="id" class="data-id" disabled/></p>
+                                <input type="hidden" id="employee-id" name="id"/>
+                                <p class="fw-bolder text-muted mb-1 fs-7">Employee</p>
                                 <div class="row g-2 mb-2">
                                     <div class="col-md">
                                         <div class="form-floating">
@@ -264,7 +246,8 @@
                                 </div>
                             </form>
                             <form id="departments">
-                                <p class="fw-bolder text-muted mb-1 fs-7">Department <input name="id" class="data-id" disabled/></p>
+                                <input type="hidden" id="department-id" name="id"/>
+                                <p class="fw-bolder text-muted mb-1 fs-7">Department</p>
                                 <div class="row g-2 mb-2">
                                     <div class="col-md">
                                         <div class="form-floating">
@@ -283,7 +266,8 @@
                                 </div>
                             </form>
                             <form id="locations">
-                                <p class="fw-bolder text-muted mb-1 fs-7">Location <input name="id" class="data-id" disabled/></p>
+                                <input type="hidden" id="location-id" name="id"/>
+                                <p class="fw-bolder text-muted mb-1 fs-7">Location</p>
                                 <div class="row g-2 mb-2">
                                     <div class="col-md">
                                         <div class="form-floating">
@@ -306,7 +290,6 @@
         
         <script src="./src/modules/jquery-3.6.0.min.js"></script>
         <script src="./src/modules/bootstrap.bundle.min.js"></script>
-        <script src="./src/modules/bs-fa-component-builder.js"></script>
         <script src="./src/modules/fontawesome.min.js"></script>
         <script src="./src/index.js" type="module"></script>
 

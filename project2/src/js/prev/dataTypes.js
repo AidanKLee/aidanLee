@@ -15,13 +15,13 @@ class Employee {
     _department;
     _location;
 
-    constructor({id, firstName, lastName, email, jobTitle, department, location}) {
+    constructor({id, firstName, lastName, email, jobTitle, department, location}, addToList = true) {
         this.#setId(id); this.#setFirstName(firstName); this.#setLastName(lastName); this.#setEmail(email);
         this.#setjobTitle(jobTitle); this.#setDepartment(department); this.#setLocation(location);
-
-        Employee.data.count++;
-        Employee.data.list.push(this);
-
+        if (addToList) {
+            Employee.data.count++;
+            Employee.data.list.push(this);
+        }+9
     }
 
     get id() {
@@ -109,8 +109,23 @@ class Employee {
         }
     }
 
+    replace(employee) {
+        const index = Employee.data.list.findIndex(employee => employee.id === this.id);
+        Employee.data.list[index] = employee;
+    }
+
+    async getLatestData() {
+        const data = await controller.getEmployeeById(this.id);
+        data.department = Department.getById(data.department);
+        data.location = Location.getById(data.location);
+        const newData = new Employee(data, false);
+
+        this.replace(newData);
+        return newData;
+    }
+
     static getById(id) {
-        return Employee.data.list.filter(employee => id === employee.id)[0];
+        return Employee.data.list.filter(employee => id == employee.id)[0];
     }
 
     static async clear() {
@@ -158,10 +173,12 @@ class Department {
     _name;
     _location;
 
-    constructor({id, name, location}) {
+    constructor({id, name, location}, addToList = true) {
         this.#setId(id); this.#setName(name); this.#setLocation(location);
-        Department.data.count++;
-        Department.data.list.push(this);
+        if (addToList) {
+            Department.data.count++;
+            Department.data.list.push(this);
+        }
     }
 
     get id() {
@@ -201,12 +218,27 @@ class Department {
         }
     }
 
-    hasEmployees() {
-        return Employee.data.list.findIndex(employee => employee.department === this.name || employee.department.id === this.id) >= 0;
+    replace(department) {
+        const index = Department.data.list.findIndex(dept => dept.id === this.id);
+        Department.data.list[index] = department;
+    }
+
+    async getLatestData() {
+        const data = await controller.getDepartmentById(this.id);
+        data.location = Location.getById(data.location);
+        const newData = new Department(data, false);
+
+        this.replace(newData);
+        return newData;
+    }
+
+    async hasEmployees() {
+        const count = await controller.getDepartmentEmployeeCount(this.id);
+        return count > 0;
     }
 
     static getById(id) {
-        return Department.data.list.filter(department => id === department.id)[0];
+        return Department.data.list.filter(department => id == department.id)[0];
     }
 
     static getByName(name) {
@@ -257,10 +289,12 @@ class Location {
     _id;
     _name;
 
-    constructor({id, name}) {
+    constructor({id, name}, addToList = true) {
         this.#setId(id); this.#setName(name);
-        Location.data.count++;
-        Location.data.list.push(this);
+        if (addToList) {
+            Location.data.count++;
+            Location.data.list.push(this);
+        }
     }
 
     get id() {
@@ -288,12 +322,26 @@ class Location {
         }
     }
 
-    hasDepartments() {
-        return Department.data.list.findIndex(department => department.location.id === this.id || department.location === this.name) >= 0;
+    replace(location) {
+        const index = Location.data.list.findIndex(location => location.id === this.id);
+        Location.data.list[index] = location;
+    }
+
+    async getLatestData() {
+        const data = await controller.getLocationById(this.id);
+        const newData = new Location(data, false);
+
+        this.replace(newData);
+        return newData;
+    }
+
+    async hasDepartments() {
+        const count = await controller.getLocationDepartmentCount(this.id);
+        return count > 0;
     }
 
     static getById(id) {
-        return Location.data.list.filter(location => id === location.id)[0];
+        return Location.data.list.filter(location => id == location.id)[0];
     }
 
     static getByName(name) {

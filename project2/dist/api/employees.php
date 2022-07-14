@@ -13,11 +13,10 @@
     header('Content-Type: application/json; charset=UTF-8');
 
     if ($method === "GET") {
-        parse_str(file_get_contents("php://input"),$_GET);
         if (isset($_GET["id"])) {
-            $response = $db->one('SELECT p.id, p.lastName, p.firstName, p.jobTitle, p.email, d.name as department, l.name as location FROM personnel p LEFT JOIN department d ON (d.id = p.departmentID) LEFT JOIN location l ON (l.id = d.locationID) WHERE p.id = ? ORDER BY p.lastName, p.firstName, d.name, l.name', [$_REQUEST["id"]], "i");
+            $response = $db->one('SELECT p.id, p.lastName, p.firstName, p.jobTitle, p.email, d.id as department, l.id as location FROM personnel p LEFT JOIN department d ON (d.id = p.departmentID) LEFT JOIN location l ON (l.id = d.locationID) WHERE p.id = ? ORDER BY p.lastName, p.firstName, d.name, l.name', [$_REQUEST["id"]], "i");
         } else {
-            $response = $db->query('SELECT p.id, p.lastName, p.firstName, p.jobTitle, p.email, d.name as department, l.name as location FROM personnel p LEFT JOIN department d ON (d.id = p.departmentID) LEFT JOIN location l ON (l.id = d.locationID) ORDER BY p.lastName, p.firstName, d.name, l.name');
+            $response = $db->query('SELECT p.id, p.lastName, p.firstName, p.jobTitle, p.email, d.id as department, l.id as location FROM personnel p LEFT JOIN department d ON (d.id = p.departmentID) LEFT JOIN location l ON (l.id = d.locationID) ORDER BY p.lastName, p.firstName, d.name, l.name');
         }
     } elseif ($method === "POST") {
         parse_str(file_get_contents("php://input"),$_POST);

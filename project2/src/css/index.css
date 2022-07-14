@@ -80,10 +80,6 @@ header.disabled, main.disabled {
     opacity: 1;
 }
 
-/* #loader.i + div {
-    opacity: 0;
-} */
-
 #loader>div {
     position: absolute;
     top: calc(50% - 24px);
@@ -99,10 +95,6 @@ header.disabled, main.disabled {
     height: 48px;
     width: 48px;
     border-radius: 50%;
-    /* box-shadow: 
-        .5rem .5rem .5rem rgba(0, 0, 0, 0.1),
-        inset -.5rem -.5rem .5rem rgba(0, 0, 0, 0.2),
-        inset .5rem .5rem .5rem rgba(255, 255, 255, 0.1); */
 }
 
 #loader.clear>div>div:not(:last-of-type) {
@@ -158,6 +150,14 @@ header.disabled, main.disabled {
     left: 50%;
     transform: translateY(-100%) translateX(-50%);
     border-left: 0 none transparent;
+}
+
+.navbar .offcanvas.shadow.show {
+    box-shadow: 0 .125rem .25rem rgba(0,0,0,.8)!important;
+}
+
+.navbar .offcanvas-backdrop {
+    opacity: .1;
 }
 
 .navbar .offcanvas.show.hiding {
@@ -377,6 +377,10 @@ header.disabled, main.disabled {
     width: 1rem;
 }
 
+.toast button {
+    min-width: 64px;
+}
+
 table {
     table-layout: fixed;
     white-space: nowrap;
@@ -426,7 +430,7 @@ table > thead > tr > th.desc svg {
     transform: rotate(180deg);
 }
 
-table > thead > tr > th:hover:not(:first-of-type) {
+table > thead > tr > th:hover:not(:first-of-type, :nth-of-type(2)) {
     background-color: var(--bs-primary);
     color: var(--bs-light);
 }
@@ -444,12 +448,13 @@ table > tbody > tr > td {
 table > thead > tr > th:first-of-type,
 table > tbody > tr > td:first-of-type {
     width: 128px;
-    text-align: center;
+    text-align: end;
 }
 
 table > thead > tr > th:nth-of-type(2),
 table > tbody > tr > td:nth-of-type(2) {
-    width: 62px;
+    width: 80px;
+    text-align: center;
 }
 
 table > thead > tr > th div,
@@ -477,36 +482,51 @@ table > tbody > tr > td div {
     transition: .2s;
 }
 
-@media only screen and (max-width: 350px) {
+@media only screen and (max-width: 310px) {
+    .add-employee-wrapper {
+        position: absolute;
+        right: .5rem;
+        top: calc(54px + .5rem);
+    }
+}
+
+@media only screen and (max-width: 530px) {
 
     #add-employee {
         max-width: 32px !important;
     }
 
+    #count > button > svg {
+        margin: 0 !important;
+    }
+
     #count button span {
         max-width: 0px;
+        margin: 0 !important;
     }
 
-    #new-employee span {
-        max-width: 0 !important;
-        margin-left: 0 !important;
+    #count button p {
+        display: none;
     }
 
+}
+
+@media only screen and (max-width: 345px) {
+    table > thead > tr > th:nth-of-type(2),
+    table > tbody > tr > td:nth-of-type(2) {
+        display: none;
+    }
 }
 
 @media only screen and (max-width: 480px) {
     thead {
         display: none;
     }
-    table > thead > tr > th:nth-of-type(4),
-    table > tbody > tr > td:nth-of-type(4) {
-        display: none;
-    }
 }
 
 @media only screen and (max-width: 512px) {
-    table > thead > tr > th:nth-of-type(2),
-    table > tbody > tr > td:nth-of-type(2) {
+    table > thead > tr > th:nth-of-type(4),
+    table > tbody > tr > td:nth-of-type(4) {
         display: none;
     }
 
