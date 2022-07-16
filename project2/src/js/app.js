@@ -51,7 +51,7 @@ class App {
         this._table._body.render();
     }
 
-    async getData(initialRender) {
+    async getData(selectedTable) {
         [Employee,Department,Location].forEach(dataType => dataType.clear());
 
         const data = await Promise.all([ controller.getEmployees(), controller.getDepartments(), controller.getLocations() ]);
@@ -69,9 +69,7 @@ class App {
             new Employee({ ...employee, department, location });
         })
 
-        if (!initialRender) {
-            this.tableSelect(this._selectedTable);
-        }
+        this.tableSelect(selectedTable);
     }
 
     handleSearchInput = e => {
@@ -90,7 +88,7 @@ class App {
         const rowCount = document.querySelector('#count>button>p');
 
         icon.className = icons[value];
-        // button.replaceChild(icon, oldIcon);
+        button.replaceChild(icon, oldIcon);
         tableName.innerHTML = K.toTitle(value);
         rowCount.innerHTML = `(${this[`_${value}`].count})`;
 
@@ -218,8 +216,10 @@ class App {
 
             if (id.includes('add')) {
                 buttons[id].addEventListener('click', async e => {
-                    await this._formModal.handleModalShow(e);
-                    this._formModal.bs.show();
+                    const showModal = await this._formModal.handleModalShow(e);
+                    if (showModal) {
+                        this._formModal.bs.show();
+                    }
                 })
             } else {
                 if (selectedRows.length === 0) { buttons[id].disabled = true }
@@ -234,8 +234,10 @@ class App {
     
                 if (id.includes('edit')) {
                     buttons[id].addEventListener('click', async e => {
-                        await this._formModal.handleModalShow(e);
-                        this._formModal.bs.show();
+                        const showModal = await this._formModal.handleModalShow(e);
+                        if (showModal) {
+                            this._formModal.bs.show();
+                        }
                     })
                 }
 
@@ -259,8 +261,7 @@ class App {
                 }
             }))
 
-            await this.getData();
-            this.tableSelect(this._selectedTable);
+            await this.getData(this._selectedTable);
         }, this._selectedRows.length > 1);
     }
 
@@ -309,6 +310,15 @@ class App {
         controller.addEventListener('fulfilled', e => {
             this.toggleLoader(false);
         })
+        controller.addEventListener('error', async e => {
+            this._formModal.handleWarn('error', e => console.warn('An error occured.'));
+            if (this._formModal._modal.classList.contains('show')) {
+                console.warn('Going to the next entry.')
+                this._formModal.setSelectedRow((current, selectedRows) => current + 1 === selectedRows.length ? 0 : current + 1);
+                await this._formModal.insertSelectedRow();
+            }
+            this.toggleLoader(false);
+        })
 
         Array.from(document.querySelectorAll('main:not(input)')).forEach(el => {
             el.addEventListener('contextmenu', e => {
@@ -316,10 +326,7 @@ class App {
             })
         })
 
-        document.getElementById('refresh').addEventListener('click', async e => {
-            await this.getData();
-            this.tableSelect(this._selectedTable);
-        })
+        document.getElementById('refresh').addEventListener('click', async e => await this.getData(this._selectedTable));
 
         document.getElementById('department').addEventListener('input', e => {
             const department = Department.getByName(e.target.value);
@@ -328,7 +335,7 @@ class App {
         })
 
         tableSelect.forEach(button => {
-            button.addEventListener('click', this.tableSelect.bind(this));
+            button.addEventListener('click', this.getData.bind(this));
         })
 
         this._searchInput.addEventListener('input', this.handleSearchInput.bind(this));
@@ -365,13 +372,12 @@ class App {
             document.getElementById('touch-select').classList.remove('active');
         })
 
-        await this.getData();
+        await this.getData('employees');
     }
 
     async run() {
         await this.willRun(true);
         $(async () => {
-            this.tableSelect('employees');
             this._formModal = new ModalController(this, '#form-modal');
         })
     }
@@ -493,13 +499,17 @@ class Employee {
     }
 
     async getLatestData() {
-        const data = await controller.getEmployeeById(this.id);
-        data.department = Department.getById(data.department);
-        data.location = Location.getById(data.location);
-        const newData = new Employee(data, false);
-
-        this.replace(newData);
-        return newData;
+        try {
+            const data = await controller.getEmployeeById(this.id);
+            data.department = Department.getById(data.department);
+            data.location = Location.getById(data.location);
+            const newData = new Employee(data, false);
+        
+            this.replace(newData);
+            return newData;
+        } catch(err) {
+            console.warn(`Could not get the most recent data for ${this.firstName} ${this.lastName}.`);
+        }
     }
 
     static getById(id) {
@@ -602,12 +612,16 @@ class Department {
     }
 
     async getLatestData() {
-        const data = await controller.getDepartmentById(this.id);
-        data.location = Location.getById(data.location);
-        const newData = new Department(data, false);
-
-        this.replace(newData);
-        return newData;
+        try {
+            const data = await controller.getDepartmentById(this.id);
+            data.location = Location.getById(data.location);
+            const newData = new Department(data, false);
+    
+            this.replace(newData);
+            return newData;
+        } catch(err) {
+            console.warn(`Couldn't get the most recent data for ${this.name}.`);
+        }
     }
 
     async hasEmployees() {
@@ -706,11 +720,15 @@ class Location {
     }
 
     async getLatestData() {
-        const data = await controller.getLocationById(this.id);
-        const newData = new Location(data, false);
+        try {
+            const data = await controller.getLocationById(this.id);
+            const newData = new Location(data, false);
 
-        this.replace(newData);
-        return newData;
+            this.replace(newData);
+            return newData;
+        } catch(err) {
+            console.warn(`Couldn't get the most recent data for ${this.name}.`);
+        }
     }
 
     async hasDepartments() {
@@ -779,11 +797,16 @@ class Controller extends EventTarget {
 
     async request(params) {
         const request = new Pajax(params);
-        this.addRequest(request);
+        try {
+            this.addRequest(request);
 
-        const response = await request.fetch();
-        this.removeRequest(request);
-        return response.data;
+            const response = await request.fetch();
+            this.removeRequest(request);
+            return response.data;
+        } catch (err) {
+            this.removeRequest(request);
+            this.dispatchEvent(errorEvent);
+        }
     }
 
     addRequest(request) {
@@ -792,6 +815,7 @@ class Controller extends EventTarget {
             this.dispatchEvent(requestingEvent);
             this.setRequesting(true)
         };
+
         this._requests.push(request);
     }
 
@@ -931,7 +955,7 @@ class Pajax extends EventTarget {
     }
 
     pajax({url, type = 'GET', dataType = 'json', data}) {
-        return new Promise(resolved => {
+        return new Promise((resolved, rejected) => {
             this.dispatchEvent(requestingEvent);
             $.ajax({
                 url, type, dataType, data,
@@ -940,9 +964,9 @@ class Pajax extends EventTarget {
                     resolved(response);
                 },
                 error: (jqXHR, textStatus, err) => {
-                    errorEvent.error = { jqXHR, textStatus, err }
-                    console.error(errorEvent)
+                    errorEvent.error = { jqXHR, textStatus, err };
                     this.dispatchEvent(errorEvent);
+                    rejected(errorEvent.error.responseText);
                 }
             })
         })
@@ -1071,7 +1095,7 @@ class ModalController {
         this._table = name;
     }
 
-    async setSelectedRow(value) {
+    setSelectedRow(value) {
         if (typeof value === 'function') {
             this._selectedRow = value(this._selectedRow, this.app._selectedRows);
         } else if (typeof value === 'number') {
@@ -1079,18 +1103,27 @@ class ModalController {
         } else {
             throw new Error('You can only set the selected row using a function of a number');
         }
-        await this.app._selectedRows[this.selectedRow].data.getLatestData();
     }
 
-    insertSelectedRow() {
-        const selectedFormEntries = Array.from(this.forms[this.selectedForm].querySelectorAll('input, select'));
+    async insertSelectedRow() {
+        try {
+            const selectedFormEntries = Array.from(this.forms[this.selectedForm].querySelectorAll('input, select'));
+            const latestData = await this.app._selectedRows[this.selectedRow].data.getLatestData();
+    
+            selectedFormEntries.map(entry => {
+                const entryName = entry.getAttribute('name');
+                let entryData = latestData[`_${entryName}`];
+    
+                if (typeof entryData === 'object') entryData = entryData.name;
+    
+                entry.value = entryData;
+            })
 
-        selectedFormEntries.forEach(entry => {
-            const entryName = entry.getAttribute('name');
-            const entryData = this.app._selectedRows[this.selectedRow].data[`_${entryName}`];
-
-            entry.value = entryData;
-        })
+            return true;
+        } catch(err) {
+            console.warn(`There's no data to fill the form.`);
+            return false;
+        }
     }
 
     disableButtons() {
@@ -1144,8 +1177,7 @@ class ModalController {
                 await Location.delete(id);
             }
 
-            await this.app.getData();
-            this.app.tableSelect(this.app._selectedTable);
+            await this.app.getData(this.app._selectedTable);
 
             if (prevSelectedRows.length === 1) {
                 this.bs.hide();
@@ -1177,8 +1209,7 @@ class ModalController {
                     await type.edit(data);
                 }
 
-                await this.app.getData();
-                this.app.tableSelect(this.app._selectedTable);
+                await this.app.getData(this.app._selectedTable);
                 
                 if (this.type === 'add' || (this.type === 'edit' && prevSelectedRows.length === 1)) {
                     this.bs.hide();
@@ -1211,7 +1242,7 @@ class ModalController {
         return data;
     }
 
-    handleMultiSubmitDelete(prevSelectedRows, editedRow) {
+    async handleMultiSubmitDelete(prevSelectedRows, editedRow) {
         this.app._selectedRows = this.app._table._body.rows.filter(row => {
             const i = prevSelectedRows.findIndex(r => {
                 return r._data.id === row._data.id;
@@ -1236,7 +1267,7 @@ class ModalController {
             this.buttons.next.disabled = true;
             this.buttons.prev.disabled = true;
         }
-        this.insertSelectedRow();
+        await this.insertSelectedRow();
     }
 
     async handleWarn(type, cb, multi = false) {
@@ -1246,6 +1277,14 @@ class ModalController {
         const toast = bootstrap.Toast.getOrCreateInstance(element, { autohide: false});
         const danger = element.querySelector('.btn-danger');
         const secondary = element.querySelector('.btn-secondary');
+
+        let firstName;
+        let name;
+
+        if (this.app._selectedRows[this.selectedRow]) {
+            firstName = this.app._selectedRows[this.selectedRow].data.firstName;
+            name = firstName ? `${firstName} ${this.app._selectedRows[this.selectedRow].data.lastName}` : this.app._selectedRows[this.selectedRow].data.name;
+        }
 
         danger.classList.remove('none');
 
@@ -1288,6 +1327,11 @@ class ModalController {
             toast.show();
         }
 
+        if (type === 'error') {
+            createToast(element, false, `${name} has been deleted or there was an error processing your request. Refresh the page to ensure ${name} is still in the database.`);
+            return;
+        }
+
         if (type === 'delete' && (this._app._selectedTable === 'departments' || this._app._selectedTable === 'locations')) {
             if (this._app._selectedTable === 'departments') {
                 if (multi) {
@@ -1297,9 +1341,12 @@ class ModalController {
                         createToast(element, false, 'You cannot delete a department if it still contains employees.');
                         return;
                     }
-                } else if (await this.app._selectedRows[this.selectedRow].data.hasEmployees()) {
-                    createToast(element, false, 'You cannot delete a department if it still contains employees.');
-                    return;
+                } else {
+                    const deptHasEmployess = await this.app._selectedRows[this.selectedRow].data.hasEmployees();
+                    if (deptHasEmployess) {
+                        createToast(element, false, 'You cannot delete a department if it still contains employees.');
+                        return;
+                    }
                 }
             } else if (this._app._selectedTable === 'locations') {
                 if (multi) {
@@ -1318,9 +1365,6 @@ class ModalController {
         
         if ((this.isEditied && type === 'close') || type === 'delete') {
             if (type === 'delete') {
-                const firstName = this.app._selectedRows[this.selectedRow].data.firstName;
-                const name = firstName ? `${firstName} ${this.app._selectedRows[this.selectedRow].data.lastName}` : this.app._selectedRows[this.selectedRow].data.name;
-
                 if (multi) {
                     createToast(element, true, `Delete ${this.app._selectedRows.length} ${this._app._selectedTable}?`);
                 } else {
@@ -1344,7 +1388,7 @@ class ModalController {
         this.setTable(table);
 
         this.disableButtons();
-        if (modalType !== 'add') { await this.setSelectedRow(0); }
+        if (modalType !== 'add') this.setSelectedRow(0);
         
         this.setSelectedForm(this.forms.findIndex(form => form.getAttribute('id') === table));
 
@@ -1363,45 +1407,49 @@ class ModalController {
                     entry.value = entry.firstChild.value;
                 }
             })
-            this.form
+
             this.toggleReadOnly(false, table);
+            return true;
         }
 
         if (modalType === 'edit') {
-            this.insertSelectedRow(readOnly);
-            if (!readOnly) {
-                this.toggleReadOnly(false, table);
-            } else {
-                this.toggleReadOnly(true, table);
+            const isInserted = await this.insertSelectedRow();
+            if (isInserted) {
+                if (!readOnly) {
+                    this.toggleReadOnly(false, table);
+                } else {
+                    this.toggleReadOnly(true, table);
+                }
+    
+                this.buttons.edit.disabled = false;
+                this.buttons.delete.disabled = false;
+    
+                if (this.app._selectedRows.length > 1) {
+                    this.buttons.prev.disabled = false;
+                    this.buttons.next.disabled = false;
+                }
             }
-
-            this.buttons.edit.disabled = false;
-            this.buttons.delete.disabled = false;
-
-            if (this.app._selectedRows.length > 1) {
-                this.buttons.prev.disabled = false;
-                this.buttons.next.disabled = false;
-            }
+            return isInserted;
         }
     }
 
     run() {
-        this.buttons.next.addEventListener('click', e => {
-            const goNext = () => {
+        this.buttons.next.addEventListener('click', async e => {
+            const goNext = async () => {
                 this.setSelectedRow.bind(this)((current, selectedRows) => current + 1 === selectedRows.length ? 0 : current + 1);
-                this.insertSelectedRow();
+                await this.insertSelectedRow();
             }
 
-            this.handleWarn('close', goNext.bind(this));
+            this.handleWarn('close', await goNext.bind(this));
         })
 
-        this.buttons.prev.addEventListener('click', e => {
-            const goPrev = () => {
+        this.buttons.prev.addEventListener('click', async e => {
+            const goPrev = async () => {
                 this.setSelectedRow.bind(this)((current, selectedRows) => current - 1 < 0 ? selectedRows.length - 1 : current - 1);
-                this.insertSelectedRow();
+                await this.insertSelectedRow();
             }
 
-            this.handleWarn('close', goPrev.bind(this));
+            this.handleWarn('close', await goPrev.bind(this));
         })
 
         this.buttons.edit.addEventListener('click', e => {
@@ -1836,8 +1884,10 @@ class Row {
             if (type === 'delete') {
                 this.parent.table.app.handleNoModalDelete(e);
             } else {
-                await this.parent.table.app._formModal.handleModalShow(e);
-                this.parent.table.app._formModal.bs.show();
+                const showModal = await this.parent.table.app._formModal.handleModalShow(e);
+                if (showModal) {
+                    this.parent.table.app._formModal.bs.show();
+                }
             }
         }
         
@@ -1908,10 +1958,6 @@ class Row {
             touchControls.classList.add('hide');
             this.parent.deselectAllRows();
         }
-    }
-
-    async getLatestData() {
-        
     }
 
     renderTH() {
@@ -1998,8 +2044,10 @@ class Row {
                     if (buttonType === 'delete') {
                         this.parent.table.app.handleNoModalDelete(e);
                     } else {
-                        await this.parent.table.app._formModal.handleModalShow(e);
-                        this.parent.table.app._formModal.bs.show();
+                        const showModal = await this.parent.table.app._formModal.handleModalShow(e);
+                        if (showModal) {
+                            this.parent.table.app._formModal.bs.show();
+                        }
                     }
                 }
             } else if (!this.parent._touchSelectEnabled && !isLongTouch && !isTouchMove) {
@@ -2008,8 +2056,10 @@ class Row {
                     if (buttonType === 'delete') {
                         this.parent.table.app.handleNoModalDelete(e);
                     } else {
-                        await this.parent.table.app._formModal.handleModalShow(e);
-                        this.parent.table.app._formModal.bs.show();
+                        const showModal = await this.parent.table.app._formModal.handleModalShow(e);
+                        if (showModal) {
+                            this.parent.table.app._formModal.bs.show();
+                        }
                     }
                 }
             }
